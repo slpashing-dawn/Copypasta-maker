@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>🖌️ 카피페 위젯 생성기 (글자색 추가, 정렬 개선, 예시 업데이트)</title>
+<title>🖌️ 카피페 위젯 생성기 (버튼 색상 추가)</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -22,7 +22,6 @@
   }
   @media (max-width: 1000px) { .container { grid-template-columns: 1fr; } }
   
-  /* 좌측 폼 */
   .form-panel {
     background: white;
     border-radius: 2rem;
@@ -42,7 +41,6 @@
     font-size: 0.85rem;
     background: #fefcf5;
   }
-  /* 컬러 그리드 (콤팩트) */
   .color-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -99,7 +97,6 @@
     border-radius: 30px;
   }
   
-  /* 우측 패널 (미리보기 상단, 코드 하단) */
   .result-panel {
     background: #0f172a;
     border-radius: 2rem;
@@ -175,16 +172,11 @@
     margin-bottom: 0.5rem;
   }
   .checkbox-group label { margin-bottom: 0; font-size: 0.8rem; }
-  .two-columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.8rem;
-  }
 </style>
 </head>
 <body>
 <div class="container">
-  <!-- 좌측: 설정 폼 -->
+  <!-- 좌측 폼 -->
   <div class="form-panel">
     <h2 style="font-size: 1.3rem;">🧩 카피페 위젯 생성기</h2>
     <p style="margin-bottom:0.8rem; font-size:0.75rem;">값을 입력하면 오른쪽에 미리보기와 HTML 코드가 실시간 갱신됩니다.</p>
@@ -204,6 +196,8 @@
       <div class="color-item"><label>오른쪽 글자색</label><input type="color" id="textRightColor" value="#ffffff"></div>
       <div class="color-item"><label>이름 색상</label><input type="color" id="nameColor" value="#000000"></div>
       <div class="color-item"><label>버튼 배경</label><input type="color" id="btnBg" value="#ffffff"></div>
+      <div class="color-item"><label>버튼 글자색</label><input type="color" id="btnTextColor" value="#000000"></div>
+      <div class="color-item"><label>버튼 호버 배경</label><input type="color" id="btnHoverBg" value="#d1d5db"></div>
       <div class="color-item"><label>채팅방 이름 글자색</label><input type="color" id="chatTitleColor" value="#000000"></div>
       <div class="color-item"><label>카피페 제목 글자색</label><input type="color" id="storyTitleColor" value="#cbd5e6"></div>
     </div>
@@ -249,7 +243,7 @@
 </div>
 
 <script>
-  // ========== 새로운 예시 카피페 (사용자가 보낸 chat_widget.html 기준) ==========
+  // 예시 카피페 데이터 (사용자 제공 내용 반영)
   let storiesData = [
     { 
       title: "예시1", 
@@ -419,7 +413,7 @@
   useProfileCheckbox.addEventListener('change', () => { updateProfilePanel(); updateAll(); });
   hideEmptyMsgCheckbox.addEventListener('change', () => updateAll());
 
-  // ---------- HTML 생성 (글자색 포함) ----------
+  // ---------- HTML 생성 (버튼 색상 포함) ----------
   function generateWidgetHTML() {
     const chatRoomName = document.getElementById('chatRoomName').value;
     const headerBg = document.getElementById('headerBg').value;
@@ -430,6 +424,8 @@
     const textRightColor = document.getElementById('textRightColor').value;
     const nameColor = document.getElementById('nameColor').value;
     const btnBg = document.getElementById('btnBg').value;
+    const btnTextColor = document.getElementById('btnTextColor').value;
+    const btnHoverBg = document.getElementById('btnHoverBg').value;
     const chatTitleColor = document.getElementById('chatTitleColor').value;
     const storyTitleColor = document.getElementById('storyTitleColor').value;
     const emptyBgUrl = document.getElementById('emptyBgUrl').value;
@@ -470,8 +466,8 @@
   @keyframes fadeSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   .empty-chat-custom { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #e2e8f0; gap: 0.7rem; background: rgba(0,0,0,0.4); border-radius: 24px; padding: 1.5rem; }
   .nav-bar-custom { background: #181a1e; padding: 0.7rem 1.2rem; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #26292e; flex-wrap: wrap; }
-  .icon-btn-custom { background: ${btnBg}; border: none; width: 44px; height: 44px; border-radius: 32px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #cfd9e6; font-size: 1.35rem; margin-right: 0.5rem; transition:0.2s; }
-  .icon-btn-custom:hover { background: #3a4050; }
+  .icon-btn-custom { background: ${btnBg}; border: none; width: 44px; height: 44px; border-radius: 32px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: ${btnTextColor}; font-size: 1.35rem; margin-right: 0.5rem; transition: 0.2s; }
+  .icon-btn-custom:hover { background: ${btnHoverBg}; }
   .index-badge-custom { background: #0f1115; padding: 0.3rem 0.9rem; border-radius: 40px; font-size: 0.75rem; color: #b9c2d4; }
   .chat-messages-custom::-webkit-scrollbar { width: 4px; }
 </style>
@@ -594,7 +590,7 @@
   function updateAll() {
     updateGeneratedCode();
   }
-  const inputs = ['chatRoomName', 'headerBg', 'chatBg', 'bubbleLeftColor', 'bubbleRightColor', 'textLeftColor', 'textRightColor', 'nameColor', 'btnBg', 'chatTitleColor', 'storyTitleColor', 'emptyBgUrl', 'chatBgUrl'];
+  const inputs = ['chatRoomName', 'headerBg', 'chatBg', 'bubbleLeftColor', 'bubbleRightColor', 'textLeftColor', 'textRightColor', 'nameColor', 'btnBg', 'btnTextColor', 'btnHoverBg', 'chatTitleColor', 'storyTitleColor', 'emptyBgUrl', 'chatBgUrl'];
   inputs.forEach(id => document.getElementById(id).addEventListener('input', updateAll));
   renderStoriesForm();
   updateProfilePanel();
