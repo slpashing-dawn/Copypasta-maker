@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>🖌️ 카피페 위젯 생성기 (고화질 이미지 저장)</title>
+<title>🖌️ 카피페 위젯 생성기</title>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
-  /* 동일한 스타일 (이전과 같음) */
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: #f1f5f9;
@@ -89,6 +88,13 @@
     gap: 0.4rem;
     margin-bottom: 0.5rem;
     align-items: center;
+    flex-wrap: wrap;
+  }
+  .line-item .line-fields {
+    display: flex;
+    gap: 0.4rem;
+    flex: 1;
+    align-items: center;
   }
   .line-item input { flex: 1; font-size: 0.8rem; }
   .line-item button {
@@ -97,6 +103,18 @@
     padding: 0;
     background: #dc2626;
     border-radius: 30px;
+  }
+  .line-type-badge {
+    font-size: 0.65rem;
+    background: #e2e8f0;
+    padding: 0.2rem 0.4rem;
+    border-radius: 1rem;
+    color: #1e293b;
+  }
+  .story-buttons {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
   }
   
   .result-panel {
@@ -181,7 +199,7 @@
 <body>
 <div class="container">
   <div class="form-panel">
-    <h2 style="font-size: 1.3rem;">🧩 카피페 위젯 생성기 (고화질 이미지)</h2>
+    <h2 style="font-size: 1.3rem;">🧩 카피페 위젯 생성기 (구분선 포함)</h2>
     <p style="margin-bottom:0.8rem; font-size:0.75rem;">값을 입력하면 오른쪽에 미리보기와 HTML 코드가 실시간 갱신됩니다.</p>
 
     <div class="form-group">
@@ -205,6 +223,7 @@
       <div class="color-item"><label>버튼 호버 배경</label><input type="color" id="btnHoverBg" value="#d1d5db"></div>
       <div class="color-item"><label>채팅방 이름 글자색</label><input type="color" id="chatTitleColor" value="#000000"></div>
       <div class="color-item"><label>카피페 제목 글자색</label><input type="color" id="storyTitleColor" value="#cbd5e6"></div>
+      <div class="color-item"><label>구분선 색상</label><input type="color" id="separatorColor" value="#94a3b8"></div>
     </div>
 
     <div class="section-title">🖼️ 배경 이미지 (URL)</div>
@@ -226,7 +245,7 @@
     <div id="storiesContainer"></div>
     <button id="addStoryBtn" style="background:#2563eb;">➕ 카피페 추가</button>
     <hr>
-    <small>※ 두 번째 화자가 오른쪽 말풍선.<br>프로필 이미지 사용 시 각 캐릭터 URL 입력.<br>✨ 대사에 이미지 URL(https://...jpg, .png, .gif, .webp)을 넣으면 자동으로 이미지로 표시됩니다.</small>
+    <small>※ 두 번째 화자가 오른쪽 말풍선.<br>프로필 이미지 사용 시 각 캐릭터 URL 입력.<br>✨ 대사에 이미지 URL을 넣으면 자동으로 이미지로 표시됩니다.<br>📏 구분선은 '구분선 추가' 버튼으로 삽입 가능, 텍스트 선택사항.</small>
   </div>
 
   <div class="result-panel">
@@ -250,24 +269,28 @@
 </div>
 
 <script>
-  // 예시 카피페 데이터
+  // ======================== 카피페 데이터 (line 타입 지원) ========================
   let storiesData = [
     { 
       title: "예시1", 
       lines: [
-        { name: "뫄뫄", text: "이것저것 써 봅시다." },
-        { name: "솨솨", text: "두 번째 대사 캐릭터가 발신인 고정!" },
-        { name: "뫄뫄", text: "긴 텍스트도 문제 없습니다. 엄청나게 길다면 그때는 또 모르겠지만⋯ 자컾 카피페 백업용으로 만들기 시작했고 이후에도 ‘캐릭터들끼리 채팅 하는 거 보고싶다’는 생각 정도만 있기에 엄청나게 긴 글을 작성하셨을 때 에러가 발생한다면 저도 잘 모릅니다⋯." },
-        { name: "솨솨", text: "제작자는 코딩 문외한에 가까우며, 디자인만 직접 하고 코딩은 99%를 ai의 도움을 받았습니다. 혹시 오류가 발생한다면⋯ 일단 문의는 주세요. 다시 ai를 개 패보겠습니다." }
+        { type: "text", name: "뫄뫄", text: "이것저것 써 봅시다." },
+        { type: "text", name: "솨솨", text: "두 번째 대사 캐릭터가 발신인 고정!" },
+        { type: "separator", text: "" },
+        { type: "text", name: "뫄뫄", text: "긴 텍스트도 문제 없습니다. 엄청나게 길다면 그때는 또 모르겠지만⋯ 자컾 카피페 백업용으로 만들기 시작했고 이후에도 ‘캐릭터들끼리 채팅 하는 거 보고싶다’는 생각 정도만 있기에 엄청나게 긴 글을 작성하셨을 때 에러가 발생한다면 저도 잘 모릅니다⋯." },
+        { type: "separator", text: "여기서부터 주의" },
+        { type: "text", name: "솨솨", text: "제작자는 코딩 문외한에 가까우며, 디자인만 직접 하고 코딩은 99%를 ai의 도움을 받았습니다. 혹시 오류가 발생한다면⋯ 일단 문의는 주세요. 다시 ai를 개 패보겠습니다." }
       ]
     },
     { 
       title: "예시2", 
       lines: [
-        { name: "뫄뫄", text: "여러 명도 채팅 가능합니다!" },
-        { name: "뫄뫄", text: "다인관을 좋아하다 보니 포기할 수 없는 기능이었습니다." },
-        { name: "봐봐", text: "다만 인원이 엄청나게 많아지면 프로필 사진 설정 시 설정탭 스크롤이 길어질 듯합니다. 근데 이건 카피페 분량이 많아도 마찬가지라⋯." },
-        { name: "와와", text: "https://picsum.photos/200/150" }
+        { type: "text", name: "뫄뫄", text: "여러 명도 채팅 가능합니다!" },
+        { type: "separator", text: "" },
+        { type: "text", name: "뫄뫄", text: "다인관을 좋아하다 보니 포기할 수 없는 기능이었습니다." },
+        { type: "text", name: "봐봐", text: "다만 인원이 엄청나게 많아지면 프로필 사진 설정 시 설정탭 스크롤이 길어질 듯합니다. 근데 이건 카피페 분량이 많아도 마찬가지라⋯." },
+        { type: "separator", text: "이모티콘 테스트" },
+        { type: "text", name: "와와", text: "이미지 링크를 넣으면 이미지가 출력됩니다!" }
       ]
     }
   ];
@@ -288,7 +311,9 @@
   function getUniqueCharacters() {
     const names = new Set();
     storiesData.forEach(story => {
-      story.lines.forEach(line => { if (line.name) names.add(line.name); });
+      story.lines.forEach(line => {
+        if (line.type === 'text' && line.name) names.add(line.name);
+      });
     });
     return Array.from(names).sort();
   }
@@ -323,12 +348,41 @@
     });
   }
 
+  // 스토리 폼 렌더링 (구분선 지원)
   function renderStoriesForm() {
     storiesContainer.innerHTML = '';
     storiesData.forEach((story, idx) => {
       const storyDiv = document.createElement('div');
       storyDiv.className = 'story-item';
       storyDiv.dataset.index = idx;
+      
+      // 라인들 HTML 생성
+      let linesHtml = '';
+      story.lines.forEach((line, lineIdx) => {
+        if (line.type === 'text') {
+          linesHtml += `
+            <div class="line-item" data-lineidx="${lineIdx}">
+              <div class="line-fields">
+                <span class="line-type-badge">💬 대사</span>
+                <input type="text" placeholder="이름" class="line-name" value="${escapeHtml(line.name || '')}" style="width:30%;">
+                <input type="text" placeholder="대사 내용 (이미지 URL 가능)" class="line-text" value="${escapeHtml(line.text || '')}" style="width:60%;">
+                <button class="removeLineBtn" data-story="${idx}" data-line="${lineIdx}">✖</button>
+              </div>
+            </div>
+          `;
+        } else {
+          linesHtml += `
+            <div class="line-item" data-lineidx="${lineIdx}">
+              <div class="line-fields">
+                <span class="line-type-badge">📏 구분선</span>
+                <input type="text" placeholder="구분선 텍스트 (선택사항)" class="separator-text" value="${escapeHtml(line.text || '')}" style="flex:1;">
+                <button class="removeLineBtn" data-story="${idx}" data-line="${lineIdx}">✖</button>
+              </div>
+            </div>
+          `;
+        }
+      });
+      
       storyDiv.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <strong>📖 카피페 ${idx+1}</strong>
@@ -339,15 +393,12 @@
           <input type="text" class="story-title" value="${escapeHtml(story.title)}">
         </div>
         <div class="lines-container" data-story="${idx}">
-          ${story.lines.map((line, lineIdx) => `
-            <div class="line-item" data-lineidx="${lineIdx}">
-              <input type="text" placeholder="이름" class="line-name" value="${escapeHtml(line.name)}" style="width:30%;">
-              <input type="text" placeholder="대사 내용" class="line-text" value="${escapeHtml(line.text)}" style="width:65%;">
-              <button class="removeLineBtn" data-story="${idx}" data-line="${lineIdx}">✖</button>
-            </div>
-          `).join('')}
+          ${linesHtml}
         </div>
-        <button class="addLineBtn" data-story="${idx}" style="background:#334155; margin-top:0.2rem;">+ 대사 추가</button>
+        <div class="story-buttons">
+          <button class="addTextLineBtn" data-story="${idx}" style="background:#334155;">+ 대사 추가</button>
+          <button class="addSeparatorBtn" data-story="${idx}" style="background:#4b5563;">+ 구분선 추가</button>
+        </div>
       `;
       storiesContainer.appendChild(storyDiv);
     });
@@ -355,6 +406,7 @@
   }
 
   function attachStoryEvents() {
+    // 삭제 스토리
     document.querySelectorAll('.removeStoryBtn').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.idx);
@@ -364,17 +416,32 @@
         updateAll();
       });
     });
-    document.querySelectorAll('.addLineBtn').forEach(btn => {
+    
+    // 대사 추가
+    document.querySelectorAll('.addTextLineBtn').forEach(btn => {
       btn.addEventListener('click', () => {
         const storyIdx = parseInt(btn.dataset.story);
-        storiesData[storyIdx].lines.push({ name: "New", text: "새 대사" });
+        storiesData[storyIdx].lines.push({ type: "text", name: "새 캐릭터", text: "새 대사를 입력하세요" });
         renderStoriesForm();
         updateProfilePanel();
         updateAll();
       });
     });
-    document.querySelectorAll('.removeLineBtn').forEach(btn => {
+    
+    // 구분선 추가
+    document.querySelectorAll('.addSeparatorBtn').forEach(btn => {
       btn.addEventListener('click', () => {
+        const storyIdx = parseInt(btn.dataset.story);
+        storiesData[storyIdx].lines.push({ type: "separator", text: "" });
+        renderStoriesForm();
+        updateProfilePanel();
+        updateAll();
+      });
+    });
+    
+    // 라인 삭제
+    document.querySelectorAll('.removeLineBtn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
         const storyIdx = parseInt(btn.dataset.story);
         const lineIdx = parseInt(btn.dataset.line);
         storiesData[storyIdx].lines.splice(lineIdx, 1);
@@ -383,9 +450,13 @@
         updateAll();
       });
     });
+    
+    // 제목 수정
     storiesContainer.querySelectorAll('.story-title').forEach((input, idx) => {
       input.addEventListener('input', (e) => { storiesData[idx].title = e.target.value; updateAll(); });
     });
+    
+    // 텍스트 라인 이름/내용 수정
     storiesContainer.querySelectorAll('.line-name').forEach((input) => {
       const storyDiv = input.closest('.story-item');
       const lineItem = input.closest('.line-item');
@@ -393,7 +464,7 @@
       const storyIdx = parseInt(storyDiv.dataset.index);
       const lineIdx = parseInt(lineItem.dataset.lineidx);
       input.addEventListener('input', (e) => {
-        if (storiesData[storyIdx]?.lines[lineIdx]) {
+        if (storiesData[storyIdx]?.lines[lineIdx] && storiesData[storyIdx].lines[lineIdx].type === 'text') {
           storiesData[storyIdx].lines[lineIdx].name = e.target.value;
         }
         updateProfilePanel();
@@ -407,14 +478,31 @@
       const storyIdx = parseInt(storyDiv.dataset.index);
       const lineIdx = parseInt(lineItem.dataset.lineidx);
       input.addEventListener('input', (e) => {
-        if (storiesData[storyIdx]?.lines[lineIdx]) storiesData[storyIdx].lines[lineIdx].text = e.target.value;
+        if (storiesData[storyIdx]?.lines[lineIdx] && storiesData[storyIdx].lines[lineIdx].type === 'text') {
+          storiesData[storyIdx].lines[lineIdx].text = e.target.value;
+        }
+        updateAll();
+      });
+    });
+    
+    // 구분선 텍스트 수정
+    storiesContainer.querySelectorAll('.separator-text').forEach((input) => {
+      const storyDiv = input.closest('.story-item');
+      const lineItem = input.closest('.line-item');
+      if (!storyDiv || !lineItem) return;
+      const storyIdx = parseInt(storyDiv.dataset.index);
+      const lineIdx = parseInt(lineItem.dataset.lineidx);
+      input.addEventListener('input', (e) => {
+        if (storiesData[storyIdx]?.lines[lineIdx] && storiesData[storyIdx].lines[lineIdx].type === 'separator') {
+          storiesData[storyIdx].lines[lineIdx].text = e.target.value;
+        }
         updateAll();
       });
     });
   }
 
   document.getElementById('addStoryBtn').addEventListener('click', () => {
-    storiesData.push({ title: "새 이야기", lines: [{ name: "캐릭터", text: "대사를 입력하세요" }] });
+    storiesData.push({ title: "새 이야기", lines: [{ type: "text", name: "캐릭터", text: "대사를 입력하세요" }] });
     renderStoriesForm();
     updateProfilePanel();
     updateAll();
@@ -422,7 +510,7 @@
   useProfileCheckbox.addEventListener('change', () => { updateProfilePanel(); updateAll(); });
   hideEmptyMsgCheckbox.addEventListener('change', () => updateAll());
 
-  // ---------- HTML 생성 (위젯 코드) ----------
+  // ======================== HTML 생성 함수 (구분선 지원) ========================
   function generateWidgetHTML() {
     const chatRoomName = document.getElementById('chatRoomName').value;
     const baseFontSize = document.getElementById('baseFontSize').value;
@@ -439,6 +527,7 @@
     const btnHoverBg = document.getElementById('btnHoverBg').value;
     const chatTitleColor = document.getElementById('chatTitleColor').value;
     const storyTitleColor = document.getElementById('storyTitleColor').value;
+    const separatorColor = document.getElementById('separatorColor').value;
     const emptyBgUrl = document.getElementById('emptyBgUrl').value;
     const chatBgUrl = document.getElementById('chatBgUrl').value;
     const useProfile = useProfileCheckbox.checked;
@@ -467,6 +556,7 @@
   .message-row { display: flex; align-items: flex-start; gap: 0.5em; max-width: 100%; }
   .message-row-left { justify-content: flex-start; }
   .message-row-right { justify-content: flex-end; }
+  .separator-line { text-align: center; margin: 0.6em 0; color: ${separatorColor}; font-size: 0.85em; letter-spacing: 1px; word-break: keep-all; }
   .avatar { width: 2em; height: 2em; border-radius: 50%; object-fit: cover; background: #334155; flex-shrink: 0; margin-top: 0.2em; }
   .message-bubble-custom { display: flex; flex-direction: column; max-width: 80%; animation: fadeSlide 0.25s ease-out; }
   .message-left .message-bubble-custom { align-items: flex-start; }
@@ -520,6 +610,16 @@
       }
       return escapeHtml(text);
     }
+    function addSeparator(sepText) {
+      const div = document.createElement('div');
+      div.className = 'separator-line';
+      if (sepText && sepText.trim() !== "") {
+        div.innerText = '─── ' + sepText + ' ───';
+      } else {
+        div.innerText = '──────────';
+      }
+      container.appendChild(div);
+    }
     function addMsg(name, text, isRight){
       const row = document.createElement('div');
       row.className = "message-row " + (isRight ? "message-row-right" : "message-row-left");
@@ -553,10 +653,14 @@
     }
     function streamStory(story, token, secondSpeaker){
       for(let i=0;i<story.lines.length;i++){
+        let line = story.lines[i];
         let tid = setTimeout(()=>{
           if(token !== activeToken) return;
-          let line = story.lines[i];
-          addMsg(line.name, line.text, line.name === secondSpeaker);
+          if(line.type === 'separator') {
+            addSeparator(line.text || "");
+          } else {
+            addMsg(line.name, line.text, line.name === secondSpeaker);
+          }
         }, i*750);
         pending.push(tid);
       }
@@ -565,7 +669,10 @@
       if(idx<1||idx>TOTAL) return;
       clearTimeouts(); activeToken++; let tok = activeToken;
       let story = stories[idx-1];
-      let second = story.lines.length>=2 ? story.lines[1].name : null;
+      let second = null;
+      // 두 번째 text 타입 라인의 name 찾기
+      let textLines = story.lines.filter(l => l.type === 'text');
+      if(textLines.length >= 2) second = textLines[1].name;
       container.innerHTML='';
       setBg('chat');
       addTitle(story.title);
@@ -589,7 +696,7 @@
 </html>`;
   }
 
-  // 고화질 이미지 내보내기 (개선됨)
+  // ======================== 이미지 저장 (필터 제거) ========================
   async function exportAsImage() {
     try {
       exportBtn.disabled = true;
@@ -598,19 +705,36 @@
       const iframeDoc = previewIframe.contentDocument || previewIframe.contentWindow.document;
       const widgetElement = iframeDoc.querySelector('.chat-viewer-widget');
       if (!widgetElement) {
-        alert('위젯 영역을 찾을 수 없습니다. 잠시 후 다시 시도해주세요.');
+        alert('위젯 영역을 찾을 수 없습니다.');
         return;
       }
-      // 채팅 영역 스크롤 최상단으로
+      
       const chatArea = iframeDoc.querySelector('.chat-messages-custom');
       if (chatArea) chatArea.scrollTop = 0;
       
-      // 약간의 지연 후 캡처 (이미지 로드 대기)
-      await new Promise(resolve => setTimeout(resolve, 200));
+      const styleId = 'temp-capture-clean';
+      let tempStyle = iframeDoc.getElementById(styleId);
+      if (!tempStyle) {
+        tempStyle = iframeDoc.createElement('style');
+        tempStyle.id = styleId;
+        iframeDoc.head.appendChild(tempStyle);
+      }
+      tempStyle.textContent = `
+        * {
+          backdrop-filter: none !important;
+          filter: none !important;
+          opacity: 1 !important;
+          transform: none !important;
+        }
+        .chat-messages-custom::before { display: none !important; }
+        .story-title-message { backdrop-filter: none !important; }
+      `;
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       const canvas = await html2canvas(widgetElement, {
-        scale: 3,                // 고해상도 (기존 2 → 3)
-        backgroundColor: '#ffffff',  // 흰색 배경으로 고정 (투명 시 흐릿함 방지)
+        scale: 2,
+        backgroundColor: null,
         useCORS: true,
         logging: false,
         allowTaint: false,
@@ -619,7 +743,8 @@
         windowHeight: widgetElement.scrollHeight
       });
       
-      // 다운로드
+      tempStyle.textContent = '';
+      
       const link = document.createElement('a');
       const timestamp = new Date().toISOString().slice(0,19).replace(/:/g, '-');
       link.download = `chat_capture_${timestamp}.png`;
@@ -629,9 +754,12 @@
     } catch (err) {
       console.error(err);
       alert('이미지 생성 중 오류가 발생했습니다.\n' + err.message);
+      const iframeDoc = previewIframe.contentDocument;
+      const tempStyle = iframeDoc?.getElementById('temp-capture-clean');
+      if (tempStyle) tempStyle.textContent = '';
     } finally {
       exportBtn.disabled = false;
-      exportBtn.textContent = '📸 고화질 이미지 저장';
+      exportBtn.textContent = '📸 이미지 저장';
     }
   }
 
@@ -660,7 +788,7 @@
   function updateAll() {
     updateGeneratedCode();
   }
-  const inputs = ['chatRoomName', 'baseFontSize', 'borderRadius', 'headerBg', 'chatBg', 'bubbleLeftColor', 'bubbleRightColor', 'textLeftColor', 'textRightColor', 'nameColor', 'btnBg', 'btnTextColor', 'btnHoverBg', 'chatTitleColor', 'storyTitleColor', 'emptyBgUrl', 'chatBgUrl'];
+  const inputs = ['chatRoomName', 'baseFontSize', 'borderRadius', 'headerBg', 'chatBg', 'bubbleLeftColor', 'bubbleRightColor', 'textLeftColor', 'textRightColor', 'nameColor', 'btnBg', 'btnTextColor', 'btnHoverBg', 'chatTitleColor', 'storyTitleColor', 'separatorColor', 'emptyBgUrl', 'chatBgUrl'];
   inputs.forEach(id => document.getElementById(id).addEventListener('input', updateAll));
   renderStoriesForm();
   updateProfilePanel();
