@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>🖌️ 카피페 위젯 생성기 (글씨 크기 전체 적용)</title>
+<title>🖌️ 카피페 위젯 생성기 (고화질 이미지 저장)</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
+  /* 동일한 스타일 (이전과 같음) */
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: #f1f5f9;
@@ -136,6 +138,7 @@
     color: #94a3b8;
     display: flex;
     justify-content: space-between;
+    align-items: center;
   }
   iframe {
     width: 100%;
@@ -147,7 +150,8 @@
     max-width: 500px;
     margin: 0 auto;
   }
-  .copy-btn, .download-btn { background: #3b82f6; border: none; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.7rem; }
+  .copy-btn, .download-btn, .export-img-btn { background: #3b82f6; border: none; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.7rem; margin-left: 0.3rem; }
+  .export-img-btn { background: #10b981; }
   hr { margin: 0.8rem 0; border-color: #334155; }
   small { font-size: 0.7rem; color: #94a3b8; }
   .character-list {
@@ -172,19 +176,12 @@
     margin-bottom: 0.5rem;
   }
   .checkbox-group label { margin-bottom: 0; font-size: 0.8rem; }
-  .range-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .range-group input { flex: 1; }
-  .range-group span { min-width: 3rem; font-size: 0.8rem; }
 </style>
 </head>
 <body>
 <div class="container">
   <div class="form-panel">
-    <h2 style="font-size: 1.3rem;">🧩 카피페 위젯 생성기</h2>
+    <h2 style="font-size: 1.3rem;">🧩 카피페 위젯 생성기 (고화질 이미지)</h2>
     <p style="margin-bottom:0.8rem; font-size:0.75rem;">값을 입력하면 오른쪽에 미리보기와 HTML 코드가 실시간 갱신됩니다.</p>
 
     <div class="form-group">
@@ -229,14 +226,17 @@
     <div id="storiesContainer"></div>
     <button id="addStoryBtn" style="background:#2563eb;">➕ 카피페 추가</button>
     <hr>
-    <small>※ 두 번째 화자가 오른쪽 말풍선.<br>프로필 이미지 사용 시 각 캐릭터 URL 입력.</small>
+    <small>※ 두 번째 화자가 오른쪽 말풍선.<br>프로필 이미지 사용 시 각 캐릭터 URL 입력.<br>✨ 대사에 이미지 URL(https://...jpg, .png, .gif, .webp)을 넣으면 자동으로 이미지로 표시됩니다.</small>
   </div>
 
   <div class="result-panel">
     <div class="preview-container">
       <div class="preview-label">
         <span>🖥️ 실시간 미리보기 (3:4)</span>
-        <span style="font-size:0.6rem;">버튼/랜덤 동작 확인</span>
+        <div>
+          <button id="exportImageBtn" class="export-img-btn" style="background:#10b981;">📸 고화질 이미지 저장</button>
+          <span style="font-size:0.6rem; margin-left:0.3rem;">버튼/랜덤 동작 확인</span>
+        </div>
       </div>
       <iframe id="previewIframe" title="Preview" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"></iframe>
     </div>
@@ -267,7 +267,7 @@
         { name: "뫄뫄", text: "여러 명도 채팅 가능합니다!" },
         { name: "뫄뫄", text: "다인관을 좋아하다 보니 포기할 수 없는 기능이었습니다." },
         { name: "봐봐", text: "다만 인원이 엄청나게 많아지면 프로필 사진 설정 시 설정탭 스크롤이 길어질 듯합니다. 근데 이건 카피페 분량이 많아도 마찬가지라⋯." },
-        { name: "와와", text: "이모티콘 출력 테스트😍😍" }
+        { name: "와와", text: "https://picsum.photos/200/150" }
       ]
     }
   ];
@@ -278,6 +278,8 @@
   const useProfileCheckbox = document.getElementById('useProfileImages');
   const profilePanel = document.getElementById('profileImagesPanel');
   const hideEmptyMsgCheckbox = document.getElementById('hideEmptyMessage');
+  const previewIframe = document.getElementById('previewIframe');
+  const exportBtn = document.getElementById('exportImageBtn');
 
   function escapeHtml(str) {
     return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
@@ -420,7 +422,7 @@
   useProfileCheckbox.addEventListener('change', () => { updateProfilePanel(); updateAll(); });
   hideEmptyMsgCheckbox.addEventListener('change', () => updateAll());
 
-  // ---------- HTML 생성 (전체 글씨 크기 em 단위로 수정) ----------
+  // ---------- HTML 생성 (위젯 코드) ----------
   function generateWidgetHTML() {
     const chatRoomName = document.getElementById('chatRoomName').value;
     const baseFontSize = document.getElementById('baseFontSize').value;
@@ -453,10 +455,8 @@
 <html>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  /* 전체 글씨 크기는 여기서 기준 설정 (em 단위로 모두 상대 조정) */
   .chat-viewer-widget { all: initial; display: block; max-width: 720px; margin: 1.2rem auto; line-height: 1.45; }
   .chat-viewer-widget * { box-sizing: border-box; margin: 0; padding: 0; }
-  /* 기준 글씨 크기 */
   .chat-viewer-widget { font-size: ${baseFontSize}px; }
   
   .chat-messenger-app { background: #0e0f11; border-radius: ${borderRadius}px; box-shadow: 0 8px 20px rgba(0,0,0,0.25); overflow: hidden; }
@@ -476,6 +476,7 @@
   .bubble-text-custom { padding: 0.5em 0.9em; border-radius: 1.2em; font-size: 0.9em; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 0.5px rgba(0,0,0,0.1); }
   .bubble-left { background: ${bubbleLeftColor}; color: ${textLeftColor}; border-top-left-radius: 0.2em; }
   .bubble-right { background: ${bubbleRightColor}; color: ${textRightColor}; border-top-right-radius: 0.2em; }
+  .chat-image { max-width: 100%; max-height: 200px; border-radius: 0.8em; cursor: pointer; display: block; margin: 0.2em 0; }
   @keyframes fadeSlide { from { opacity: 0; transform: translateY(0.3em); } to { opacity: 1; transform: translateY(0); } }
   .empty-chat-custom { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #e2e8f0; gap: 0.5em; background: rgba(0,0,0,0.4); border-radius: 1.2em; padding: 1em; font-size: 0.9em; }
   .nav-bar-custom { background: #181a1e; padding: 0.5em 1em; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #26292e; flex-wrap: wrap; }
@@ -510,12 +511,22 @@
     function setBg(state){ let url = state==='empty' ? emptyBg : chatBg; if(url && url.trim()) container.style.backgroundImage = "url('"+url+"')"; else container.style.backgroundImage="none"; container.style.backgroundColor="${chatBg}"; }
     ${showEmptyFuncBody}
     function escapeHtml(s){ return s.replace(/[&<>]/g, m=> m==='&'?'&amp;':(m==='<'?'&lt;':'&gt;')); }
+    function isImageUrl(url) {
+      return /^https?:\\/\\/[^\\s]+\\.(jpg|jpeg|png|gif|webp)(\\?.*)?$/i.test(url);
+    }
+    function formatMessageContent(text) {
+      if (isImageUrl(text)) {
+        return '<img src="'+escapeHtml(text)+'" class="chat-image" onclick="window.open(this.src)" loading="lazy">';
+      }
+      return escapeHtml(text);
+    }
     function addMsg(name, text, isRight){
       const row = document.createElement('div');
       row.className = "message-row " + (isRight ? "message-row-right" : "message-row-left");
       const bubbleDiv = document.createElement('div');
       bubbleDiv.className = "message-bubble-custom " + (isRight ? "message-right" : "message-left");
-      bubbleDiv.innerHTML = '<div class="message-name-custom">'+escapeHtml(name)+'</div><div class="bubble-text-custom '+(isRight?"bubble-right":"bubble-left")+'">'+escapeHtml(text)+'</div>';
+      const formattedContent = formatMessageContent(text);
+      bubbleDiv.innerHTML = '<div class="message-name-custom">'+escapeHtml(name)+'</div><div class="bubble-text-custom '+(isRight?"bubble-right":"bubble-left")+'">'+formattedContent+'</div>';
       if(useProfile && charImages[name] && charImages[name].trim() !== ""){
         const avatar = document.createElement('img');
         avatar.src = charImages[name];
@@ -578,14 +589,59 @@
 </html>`;
   }
 
+  // 고화질 이미지 내보내기 (개선됨)
+  async function exportAsImage() {
+    try {
+      exportBtn.disabled = true;
+      exportBtn.textContent = '📸 캡처 중...';
+      
+      const iframeDoc = previewIframe.contentDocument || previewIframe.contentWindow.document;
+      const widgetElement = iframeDoc.querySelector('.chat-viewer-widget');
+      if (!widgetElement) {
+        alert('위젯 영역을 찾을 수 없습니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+      // 채팅 영역 스크롤 최상단으로
+      const chatArea = iframeDoc.querySelector('.chat-messages-custom');
+      if (chatArea) chatArea.scrollTop = 0;
+      
+      // 약간의 지연 후 캡처 (이미지 로드 대기)
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const canvas = await html2canvas(widgetElement, {
+        scale: 3,                // 고해상도 (기존 2 → 3)
+        backgroundColor: '#ffffff',  // 흰색 배경으로 고정 (투명 시 흐릿함 방지)
+        useCORS: true,
+        logging: false,
+        allowTaint: false,
+        imageTimeout: 0,
+        windowWidth: widgetElement.scrollWidth,
+        windowHeight: widgetElement.scrollHeight
+      });
+      
+      // 다운로드
+      const link = document.createElement('a');
+      const timestamp = new Date().toISOString().slice(0,19).replace(/:/g, '-');
+      link.download = `chat_capture_${timestamp}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      
+    } catch (err) {
+      console.error(err);
+      alert('이미지 생성 중 오류가 발생했습니다.\n' + err.message);
+    } finally {
+      exportBtn.disabled = false;
+      exportBtn.textContent = '📸 고화질 이미지 저장';
+    }
+  }
+
   function updateGeneratedCode() {
     const code = generateWidgetHTML();
     document.getElementById('generatedCode').innerText = code;
-    const iframe = document.getElementById('previewIframe');
     const blob = new Blob([code], {type: 'text/html'});
     const url = URL.createObjectURL(blob);
-    iframe.src = url;
-    iframe.onload = () => URL.revokeObjectURL(url);
+    previewIframe.src = url;
+    previewIframe.onload = () => URL.revokeObjectURL(url);
   }
 
   document.getElementById('copyCodeBtn').onclick = () => {
@@ -599,6 +655,7 @@
     a.click();
     URL.revokeObjectURL(a.href);
   };
+  exportBtn.onclick = exportAsImage;
 
   function updateAll() {
     updateGeneratedCode();
