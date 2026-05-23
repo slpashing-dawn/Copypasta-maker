@@ -198,8 +198,9 @@
 </head>
 <body>
 <div class="container">
+  <!-- 좌측 패널 -->
   <div class="form-panel">
-    <h2 style="font-size: 1.3rem;">🧩 카피페 위젯 생성기 (구분선 포함)</h2>
+    <h2 style="font-size: 1.3rem;">🧩 카피페 위젯 생성기 (전체 캡처)</h2>
     <p style="margin-bottom:0.8rem; font-size:0.75rem;">값을 입력하면 오른쪽에 미리보기와 HTML 코드가 실시간 갱신됩니다.</p>
 
     <div class="form-group">
@@ -245,15 +246,16 @@
     <div id="storiesContainer"></div>
     <button id="addStoryBtn" style="background:#2563eb;">➕ 카피페 추가</button>
     <hr>
-    <small>※ 두 번째 화자가 오른쪽 말풍선.<br>프로필 이미지 사용 시 각 캐릭터 URL 입력.<br>✨ 대사에 이미지 URL을 넣으면 자동으로 이미지로 표시됩니다.<br>📏 구분선은 '구분선 추가' 버튼으로 삽입 가능, 텍스트 선택사항.</small>
+    <small>※ 두 번째 화자가 오른쪽 말풍선.<br>프로필 이미지 사용 시 각 캐릭터 URL 입력.<br>✨ 대사에 이미지 URL을 넣으면 자동으로 이미지로 표시됩니다.<br>📏 구분선은 '구분선 추가' 버튼으로 삽입 가능, 텍스트 선택사항.<br>📸 이미지 저장 시 긴 대화도 전체 캡처됩니다.</small>
   </div>
 
+  <!-- 우측 패널 -->
   <div class="result-panel">
     <div class="preview-container">
       <div class="preview-label">
         <span>🖥️ 실시간 미리보기 (3:4)</span>
         <div>
-          <button id="exportImageBtn" class="export-img-btn" style="background:#10b981;">📸 고화질 이미지 저장</button>
+          <button id="exportImageBtn" class="export-img-btn" style="background:#10b981;">📸 전체 이미지 저장</button>
           <span style="font-size:0.6rem; margin-left:0.3rem;">버튼/랜덤 동작 확인</span>
         </div>
       </div>
@@ -269,7 +271,7 @@
 </div>
 
 <script>
-  // ======================== 카피페 데이터 (line 타입 지원) ========================
+  // ======================== 카피페 데이터 ========================
   let storiesData = [
     { 
       title: "예시1", 
@@ -285,12 +287,12 @@
     { 
       title: "예시2", 
       lines: [
-        { type: "text", name: "뫄뫄", text: "여러 명도 채팅 가능합니다!" },
-        { type: "separator", text: "" },
-        { type: "text", name: "뫄뫄", text: "다인관을 좋아하다 보니 포기할 수 없는 기능이었습니다." },
+        { type: "text", name: "뫄뫄", text: "여러 명도 채팅 가능합니다! 다인관을 좋아하다 보니 포기할 수 없는 기능이었습니다." },
         { type: "text", name: "봐봐", text: "다만 인원이 엄청나게 많아지면 프로필 사진 설정 시 설정탭 스크롤이 길어질 듯합니다. 근데 이건 카피페 분량이 많아도 마찬가지라⋯." },
-        { type: "separator", text: "이모티콘 테스트" },
-        { type: "text", name: "와와", text: "이미지 링크를 넣으면 이미지가 출력됩니다!" }
+        { type: "separator", text: "" },
+        { type: "text", name: "뫄뫄", text: "위의 내보내기 버튼을 누르면 현재 미리보기 화면에 나타나는 카피페를 이미지로 출력할 수 있습니다!" },
+        { type: "separator", text: "test" },
+        { type: "text", name: "와와", text: "이미지 링크를 넣으면 채팅에 이미지가 보내집니다." }
       ]
     }
   ];
@@ -348,7 +350,6 @@
     });
   }
 
-  // 스토리 폼 렌더링 (구분선 지원)
   function renderStoriesForm() {
     storiesContainer.innerHTML = '';
     storiesData.forEach((story, idx) => {
@@ -356,7 +357,6 @@
       storyDiv.className = 'story-item';
       storyDiv.dataset.index = idx;
       
-      // 라인들 HTML 생성
       let linesHtml = '';
       story.lines.forEach((line, lineIdx) => {
         if (line.type === 'text') {
@@ -406,7 +406,6 @@
   }
 
   function attachStoryEvents() {
-    // 삭제 스토리
     document.querySelectorAll('.removeStoryBtn').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.idx);
@@ -416,8 +415,6 @@
         updateAll();
       });
     });
-    
-    // 대사 추가
     document.querySelectorAll('.addTextLineBtn').forEach(btn => {
       btn.addEventListener('click', () => {
         const storyIdx = parseInt(btn.dataset.story);
@@ -427,8 +424,6 @@
         updateAll();
       });
     });
-    
-    // 구분선 추가
     document.querySelectorAll('.addSeparatorBtn').forEach(btn => {
       btn.addEventListener('click', () => {
         const storyIdx = parseInt(btn.dataset.story);
@@ -438,8 +433,6 @@
         updateAll();
       });
     });
-    
-    // 라인 삭제
     document.querySelectorAll('.removeLineBtn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const storyIdx = parseInt(btn.dataset.story);
@@ -450,13 +443,9 @@
         updateAll();
       });
     });
-    
-    // 제목 수정
     storiesContainer.querySelectorAll('.story-title').forEach((input, idx) => {
       input.addEventListener('input', (e) => { storiesData[idx].title = e.target.value; updateAll(); });
     });
-    
-    // 텍스트 라인 이름/내용 수정
     storiesContainer.querySelectorAll('.line-name').forEach((input) => {
       const storyDiv = input.closest('.story-item');
       const lineItem = input.closest('.line-item');
@@ -484,8 +473,6 @@
         updateAll();
       });
     });
-    
-    // 구분선 텍스트 수정
     storiesContainer.querySelectorAll('.separator-text').forEach((input) => {
       const storyDiv = input.closest('.story-item');
       const lineItem = input.closest('.line-item');
@@ -510,7 +497,7 @@
   useProfileCheckbox.addEventListener('change', () => { updateProfilePanel(); updateAll(); });
   hideEmptyMsgCheckbox.addEventListener('change', () => updateAll());
 
-  // ======================== HTML 생성 함수 (구분선 지원) ========================
+  // ======================== HTML 생성 함수 ========================
   function generateWidgetHTML() {
     const chatRoomName = document.getElementById('chatRoomName').value;
     const baseFontSize = document.getElementById('baseFontSize').value;
@@ -670,7 +657,6 @@
       clearTimeouts(); activeToken++; let tok = activeToken;
       let story = stories[idx-1];
       let second = null;
-      // 두 번째 text 타입 라인의 name 찾기
       let textLines = story.lines.filter(l => l.type === 'text');
       if(textLines.length >= 2) second = textLines[1].name;
       container.innerHTML='';
@@ -696,7 +682,7 @@
 </html>`;
   }
 
-  // ======================== 이미지 저장 (필터 제거) ========================
+  // ======================== 전체 캡처 (긴 내용 대응) ========================
   async function exportAsImage() {
     try {
       exportBtn.disabled = true;
@@ -704,14 +690,26 @@
       
       const iframeDoc = previewIframe.contentDocument || previewIframe.contentWindow.document;
       const widgetElement = iframeDoc.querySelector('.chat-viewer-widget');
-      if (!widgetElement) {
+      const chatArea = iframeDoc.querySelector('.chat-messages-custom');
+      if (!widgetElement || !chatArea) {
         alert('위젯 영역을 찾을 수 없습니다.');
         return;
       }
       
-      const chatArea = iframeDoc.querySelector('.chat-messages-custom');
-      if (chatArea) chatArea.scrollTop = 0;
+      // 원본 스타일 저장
+      const originalOverflow = chatArea.style.overflow;
+      const originalHeight = chatArea.style.height;
+      const originalAspect = chatArea.style.aspectRatio;
+      const originalMaxHeight = chatArea.style.maxHeight;
       
+      // 전체 높이로 펼치기
+      chatArea.style.overflow = 'visible';
+      chatArea.style.height = 'auto';
+      chatArea.style.aspectRatio = 'none';
+      chatArea.style.maxHeight = 'none';
+      chatArea.scrollTop = 0;
+      
+      // 필터 및 오버레이 제거용 스타일
       const styleId = 'temp-capture-clean';
       let tempStyle = iframeDoc.getElementById(styleId);
       if (!tempStyle) {
@@ -730,6 +728,7 @@
         .story-title-message { backdrop-filter: none !important; }
       `;
       
+      // 리플로우 대기
       await new Promise(resolve => setTimeout(resolve, 100));
       
       const canvas = await html2canvas(widgetElement, {
@@ -740,9 +739,14 @@
         allowTaint: false,
         imageTimeout: 0,
         windowWidth: widgetElement.scrollWidth,
-        windowHeight: widgetElement.scrollHeight
+        windowHeight: widgetElement.scrollHeight   // 전체 높이 지정
       });
       
+      // 복원
+      chatArea.style.overflow = originalOverflow;
+      chatArea.style.height = originalHeight;
+      chatArea.style.aspectRatio = originalAspect;
+      chatArea.style.maxHeight = originalMaxHeight;
       tempStyle.textContent = '';
       
       const link = document.createElement('a');
@@ -754,15 +758,24 @@
     } catch (err) {
       console.error(err);
       alert('이미지 생성 중 오류가 발생했습니다.\n' + err.message);
+      // 복원 시도
       const iframeDoc = previewIframe.contentDocument;
+      const chatArea = iframeDoc?.querySelector('.chat-messages-custom');
+      if (chatArea) {
+        chatArea.style.overflow = '';
+        chatArea.style.height = '';
+        chatArea.style.aspectRatio = '';
+        chatArea.style.maxHeight = '';
+      }
       const tempStyle = iframeDoc?.getElementById('temp-capture-clean');
       if (tempStyle) tempStyle.textContent = '';
     } finally {
       exportBtn.disabled = false;
-      exportBtn.textContent = '📸 이미지 저장';
+      exportBtn.textContent = '📸 전체 이미지 저장';
     }
   }
 
+  // ======================== 코드 업데이트 및 미리보기 ========================
   function updateGeneratedCode() {
     const code = generateWidgetHTML();
     document.getElementById('generatedCode').innerText = code;
