@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>🖌️ 카피페 위젯 생성기 (글씨 크기, 라운드 조절)</title>
+<title>🖌️ 카피페 위젯 생성기 (글씨 크기 전체 적용)</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -250,7 +250,7 @@
 </div>
 
 <script>
-  // 예시 카피페 데이터 (사용자 제공 내용 반영)
+  // 예시 카피페 데이터
   let storiesData = [
     { 
       title: "예시1", 
@@ -264,9 +264,9 @@
     { 
       title: "예시2", 
       lines: [
-        { name: "뫄뫄", text: "여러 명도 채팅 가능합니다! 다인관을 좋아하다 보니 포기할 수 없는 기능이었습니다." },
-        { name: "뫄뫄", text: "다만 인원이 엄청나게 많아지면 프로필 사진 설정 시 설정탭 스크롤이 길어질 듯합니다. 근데 이건 카피페 분량이 많아도 마찬가지라⋯." },
-        { name: "봐봐", text: "배포글에도 있지만 절대!!!! 해당 코드를 html 에디터에 입력한 이후 기본 에디터로 돌아가지 마세요. 다 깨집니다!!!!!!" },
+        { name: "뫄뫄", text: "여러 명도 채팅 가능합니다!" },
+        { name: "뫄뫄", text: "다인관을 좋아하다 보니 포기할 수 없는 기능이었습니다." },
+        { name: "봐봐", text: "다만 인원이 엄청나게 많아지면 프로필 사진 설정 시 설정탭 스크롤이 길어질 듯합니다. 근데 이건 카피페 분량이 많아도 마찬가지라⋯." },
         { name: "와와", text: "이모티콘 출력 테스트😍😍" }
       ]
     }
@@ -420,7 +420,7 @@
   useProfileCheckbox.addEventListener('change', () => { updateProfilePanel(); updateAll(); });
   hideEmptyMsgCheckbox.addEventListener('change', () => updateAll());
 
-  // ---------- HTML 생성 (글씨 크기, 라운드, 여백 포함) ----------
+  // ---------- HTML 생성 (전체 글씨 크기 em 단위로 수정) ----------
   function generateWidgetHTML() {
     const chatRoomName = document.getElementById('chatRoomName').value;
     const baseFontSize = document.getElementById('baseFontSize').value;
@@ -447,40 +447,41 @@
     
     const showEmptyFuncBody = hideMessage ? 
       `function showEmpty(){ container.innerHTML=''; setBg('empty'); indexSpan.innerText='⚡ 대기 ('+TOTAL+'개)'; currentIdx=null; }` :
-      `function showEmpty(){ container.innerHTML='<div class="empty-chat-custom">💬 대화를 불러오세요<br><span style="font-size:0.7rem;">◀ ▶ | 🎲 random</span></div>'; setBg('empty'); indexSpan.innerText='⚡ 대기 ('+TOTAL+'개)'; currentIdx=null; }`;
+      `function showEmpty(){ container.innerHTML='<div class="empty-chat-custom">💬 대화를 불러오세요<br><span style="font-size:0.8em;">◀ ▶ | 🎲 random</span></div>'; setBg('empty'); indexSpan.innerText='⚡ 대기 ('+TOTAL+'개)'; currentIdx=null; }`;
     
     return `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  /* 기본 폰트 크기 고정 (외부 영향 제거) */
-  .chat-viewer-widget { all: initial; display: block; max-width: 720px; margin: 1.2rem auto; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; line-height: 1.45; }
+  /* 전체 글씨 크기는 여기서 기준 설정 (em 단위로 모두 상대 조정) */
+  .chat-viewer-widget { all: initial; display: block; max-width: 720px; margin: 1.2rem auto; line-height: 1.45; }
   .chat-viewer-widget * { box-sizing: border-box; margin: 0; padding: 0; }
-  /* 폰트 크기 기준 설정 */
+  /* 기준 글씨 크기 */
   .chat-viewer-widget { font-size: ${baseFontSize}px; }
+  
   .chat-messenger-app { background: #0e0f11; border-radius: ${borderRadius}px; box-shadow: 0 8px 20px rgba(0,0,0,0.25); overflow: hidden; }
-  .chat-header-custom { background: ${headerBg}; padding: 0.8rem 1.2rem; border-bottom: 1px solid #2a2c30; display: flex; align-items: baseline; justify-content: flex-start; }
-  .chat-title-custom { font-weight: 700; font-size: 1.2rem; color: ${chatTitleColor}; background: none; }
-  .chat-messages-custom { aspect-ratio: 3/4; width: 100%; overflow-y: auto; padding: 0.8rem; display: flex; flex-direction: column; gap: 0.8rem; background-size: cover; background-position: center; background-repeat: no-repeat; background-color: ${chatBg}; }
-  .story-title-message { text-align: center; margin-bottom: 0.6rem; padding: 0.4rem 0.8rem; background: rgba(0,0,0,0.7); border-radius: 40px; font-size: 0.85rem; font-weight: 600; color: ${storyTitleColor}; align-self: center; border: 1px solid rgba(255,255,255,0.2); width: fit-content; backdrop-filter: blur(4px); }
-  .message-row { display: flex; align-items: flex-start; gap: 0.5rem; max-width: 100%; }
+  .chat-header-custom { background: ${headerBg}; padding: 0.8em 1.2em; border-bottom: 1px solid #2a2c30; display: flex; align-items: baseline; justify-content: flex-start; }
+  .chat-title-custom { font-weight: 700; font-size: 1.2em; color: ${chatTitleColor}; background: none; }
+  .chat-messages-custom { aspect-ratio: 3/4; width: 100%; overflow-y: auto; padding: 0.8em; display: flex; flex-direction: column; gap: 0.8em; background-size: cover; background-position: center; background-repeat: no-repeat; background-color: ${chatBg}; }
+  .story-title-message { text-align: center; margin-bottom: 0.6em; padding: 0.4em 0.8em; background: rgba(0,0,0,0.7); border-radius: 2em; font-size: 0.9em; font-weight: 600; color: ${storyTitleColor}; align-self: center; border: 1px solid rgba(255,255,255,0.2); width: fit-content; backdrop-filter: blur(4px); }
+  .message-row { display: flex; align-items: flex-start; gap: 0.5em; max-width: 100%; }
   .message-row-left { justify-content: flex-start; }
   .message-row-right { justify-content: flex-end; }
-  .avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #334155; flex-shrink: 0; margin-top: 0.2rem; }
+  .avatar { width: 2em; height: 2em; border-radius: 50%; object-fit: cover; background: #334155; flex-shrink: 0; margin-top: 0.2em; }
   .message-bubble-custom { display: flex; flex-direction: column; max-width: 80%; animation: fadeSlide 0.25s ease-out; }
   .message-left .message-bubble-custom { align-items: flex-start; }
   .message-right .message-bubble-custom { align-items: flex-end; }
-  .message-name-custom { font-size: 0.7rem; font-weight: 600; color: ${nameColor}; margin-bottom: 0.15rem; margin-left: 0.3rem; margin-right: 0.3rem; }
+  .message-name-custom { font-size: 0.7em; font-weight: 600; color: ${nameColor}; margin-bottom: 0.15em; margin-left: 0.3em; margin-right: 0.3em; }
   .message-right .message-name-custom { text-align: right; }
-  .bubble-text-custom { padding: 0.5rem 0.9rem; border-radius: 18px; font-size: 0.85rem; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 0.5px rgba(0,0,0,0.1); }
-  .bubble-left { background: ${bubbleLeftColor}; color: ${textLeftColor}; border-top-left-radius: 4px; }
-  .bubble-right { background: ${bubbleRightColor}; color: ${textRightColor}; border-top-right-radius: 4px; }
-  @keyframes fadeSlide { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-  .empty-chat-custom { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #e2e8f0; gap: 0.5rem; background: rgba(0,0,0,0.4); border-radius: 20px; padding: 1rem; }
-  .nav-bar-custom { background: #181a1e; padding: 0.5rem 1rem; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #26292e; flex-wrap: wrap; }
-  .icon-btn-custom { background: ${btnBg}; border: none; width: 40px; height: 40px; border-radius: 30px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: ${btnTextColor}; font-size: 1.2rem; margin-right: 0.4rem; transition: 0.2s; }
+  .bubble-text-custom { padding: 0.5em 0.9em; border-radius: 1.2em; font-size: 0.9em; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 0.5px rgba(0,0,0,0.1); }
+  .bubble-left { background: ${bubbleLeftColor}; color: ${textLeftColor}; border-top-left-radius: 0.2em; }
+  .bubble-right { background: ${bubbleRightColor}; color: ${textRightColor}; border-top-right-radius: 0.2em; }
+  @keyframes fadeSlide { from { opacity: 0; transform: translateY(0.3em); } to { opacity: 1; transform: translateY(0); } }
+  .empty-chat-custom { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #e2e8f0; gap: 0.5em; background: rgba(0,0,0,0.4); border-radius: 1.2em; padding: 1em; font-size: 0.9em; }
+  .nav-bar-custom { background: #181a1e; padding: 0.5em 1em; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #26292e; flex-wrap: wrap; }
+  .icon-btn-custom { background: ${btnBg}; border: none; width: 2.5em; height: 2.5em; border-radius: 2em; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: ${btnTextColor}; font-size: 1.1em; margin-right: 0.4em; transition: 0.2s; }
   .icon-btn-custom:hover { background: ${btnHoverBg}; }
-  .index-badge-custom { background: #0f1115; padding: 0.2rem 0.7rem; border-radius: 30px; font-size: 0.65rem; color: #b9c2d4; }
+  .index-badge-custom { background: #0f1115; padding: 0.2em 0.7em; border-radius: 2em; font-size: 0.7em; color: #b9c2d4; }
   .chat-messages-custom::-webkit-scrollbar { width: 4px; }
 </style>
 <body>
