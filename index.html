@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>🖌️ 카피페 위젯 생성기 + 미리보기</title>
+<title>🖌️ 카피페 위젯 생성기 + 미리보기 (글씨색 포함)</title>
 <style>
   * {
     box-sizing: border-box;
@@ -27,7 +27,6 @@
   @media (max-width: 1000px) {
     .container { grid-template-columns: 1fr; }
   }
-  /* 좌측 폼 */
   .form-panel {
     background: white;
     border-radius: 2rem;
@@ -80,8 +79,6 @@
     margin-right: 0.6rem;
     margin-top: 0.5rem;
   }
-  button.secondary { background: #334155; }
-  button.danger { background: #b91c1c; }
   button:hover { opacity: 0.85; transform: scale(0.97); }
   .story-item {
     background: #f8fafc;
@@ -104,7 +101,6 @@
     background: #dc2626;
     border-radius: 30px;
   }
-  /* 우측 영역: 코드 + 미리보기 */
   .result-panel {
     background: #0f172a;
     border-radius: 2rem;
@@ -164,7 +160,6 @@
 </head>
 <body>
 <div class="container">
-  <!-- 왼쪽: 설정 폼 -->
   <div class="form-panel">
     <h2>🧩 카피페 위젯 생성기 + 미리보기</h2>
     <p style="margin-bottom:1rem; font-size:0.85rem;">값을 입력하면 오른쪽에 미리보기와 HTML 코드가 실시간 갱신됩니다.</p>
@@ -184,12 +179,24 @@
       <input type="color" id="chatBg" value="#0b0c0e">
     </div>
     <div class="form-group">
-      <label>받는 사람 말풍선 색 (왼쪽)</label>
+      <label>받는 사람 말풍선 배경 (왼쪽)</label>
       <input type="color" id="bubbleLeftColor" value="#202328">
     </div>
     <div class="form-group">
-      <label>보내는 사람 말풍선 색 (오른쪽)</label>
+      <label>보내는 사람 말풍선 배경 (오른쪽)</label>
       <input type="color" id="bubbleRightColor" value="#2c6e5c">
+    </div>
+    <div class="form-group">
+      <label>받는 사람 글자색 (왼쪽)</label>
+      <input type="color" id="textLeftColor" value="#f0f3fa">
+    </div>
+    <div class="form-group">
+      <label>보내는 사람 글자색 (오른쪽)</label>
+      <input type="color" id="textRightColor" value="#ffffff">
+    </div>
+    <div class="form-group">
+      <label>이름 색상</label>
+      <input type="color" id="nameColor" value="#e2e8f0">
     </div>
     <div class="form-group">
       <label>버튼 배경색</label>
@@ -206,59 +213,44 @@
       <input type="text" id="chatBgUrl" placeholder="https://example.com/chat-bg.jpg">
     </div>
 
-    <div class="section-title">📚 카피페 데이터 (여러 개 추가 가능)</div>
+    <div class="section-title">📚 카피페 데이터</div>
     <div id="storiesContainer"></div>
     <button id="addStoryBtn" style="background:#2563eb;">➕ 카피페 추가</button>
     <hr>
-    <small>※ 각 카피페: 제목 + 대사들. 두 번째 화자가 자동으로 오른쪽 말풍선(보낸 사람)이 됩니다.</small>
+    <small>※ 두 번째 화자가 자동으로 오른쪽 말풍선(보낸 사람)이 됩니다.</small>
   </div>
 
-  <!-- 오른쪽: 코드 + 미리보기 -->
   <div class="result-panel">
     <div class="code-header">
-      <strong>📋 생성된 HTML 코드 (티스토리 포스트용)</strong>
+      <strong>📋 생성된 HTML 코드</strong>
       <div>
         <button id="copyCodeBtn" class="copy-btn">📋 복사</button>
         <button id="downloadHtmlBtn" class="download-btn">⬇️ HTML 파일로 저장</button>
       </div>
     </div>
-    <pre id="generatedCode" contenteditable="false"></pre>
-    
+    <pre id="generatedCode"></pre>
     <div class="preview-container">
       <div class="preview-label">
-        <span>🖥️ 실시간 미리보기 (3:4 비율 위젯)</span>
-        <span style="font-size:0.65rem;">미리보기 내에서도 버튼/랜덤 동작 확인 가능</span>
+        <span>🖥️ 실시간 미리보기 (3:4 비율)</span>
+        <span style="font-size:0.65rem;">버튼/랜덤 동작 확인 가능</span>
       </div>
-      <iframe id="previewIframe" title="Widget Preview" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals" style="aspect-ratio: 3/4; width: 100%;"></iframe>
+      <iframe id="previewIframe" title="Preview" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals" style="aspect-ratio: 3/4; width: 100%;"></iframe>
     </div>
-    <small>💡 위젯 코드를 복사하여 티스토리 HTML 모드에 붙여넣으세요. 미리보기로 실제 동작을 확인할 수 있습니다.</small>
   </div>
 </div>
 
 <script>
-  // ---------- stories 데이터 관리 ----------
+  // 초기 데이터
   let storiesData = [
-    {
-      title: "Morning Chaos",
-      lines: [
-        { name: "Dick", text: "(yawning) Mornin', babe." },
-        { name: "Aiden", text: "(making coffee) You drooled on my shoulder again." },
-        { name: "Dick", text: "That's called marking my territory." },
-        { name: "Aiden", text: "(deadpan) Your territory is sticky and gross." }
-      ]
-    },
-    {
-      title: "Secret Cats",
-      lines: [
-        { name: "Jason", text: "(looking suspicious) Why's there a cat in the cave?" },
-        { name: "Aiden", text: "(holding a tiny black kitten) This is Batman Jr." },
-        { name: "Dick", text: "(snorting) Bruce is gonna murder you." },
-        { name: "Aiden", text: "(shrugs) Worth it." }
-      ]
-    }
+    { title: "Morning Chaos", lines: [ { name: "Dick", text: "(yawning) Mornin', babe." }, { name: "Aiden", text: "(making coffee) You drooled on my shoulder again." }, { name: "Dick", text: "That's called marking my territory." }, { name: "Aiden", text: "(deadpan) Your territory is sticky and gross." } ] },
+    { title: "Secret Cats", lines: [ { name: "Jason", text: "(looking suspicious) Why's there a cat in the cave?" }, { name: "Aiden", text: "(holding a tiny black kitten) This is Batman Jr." }, { name: "Dick", text: "(snorting) Bruce is gonna murder you." }, { name: "Aiden", text: "(shrugs) Worth it." } ] }
   ];
 
   const storiesContainer = document.getElementById('storiesContainer');
+  function escapeHtml(str) {
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
+  }
+
   function renderStoriesForm() {
     storiesContainer.innerHTML = '';
     storiesData.forEach((story, idx) => {
@@ -267,7 +259,7 @@
       storyDiv.dataset.index = idx;
       storyDiv.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <strong style="font-size:0.9rem;">📖 카피페 ${idx+1}</strong>
+          <strong>📖 카피페 ${idx+1}</strong>
           <button class="removeStoryBtn" data-idx="${idx}" style="background:#b91c1c; padding:0.2rem 0.8rem;">삭제</button>
         </div>
         <div class="form-group" style="margin-top:0.5rem;">
@@ -292,7 +284,7 @@
 
   function attachStoryEvents() {
     document.querySelectorAll('.removeStoryBtn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.idx);
         storiesData.splice(idx, 1);
         renderStoriesForm();
@@ -300,7 +292,7 @@
       });
     });
     document.querySelectorAll('.addLineBtn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', () => {
         const storyIdx = parseInt(btn.dataset.story);
         storiesData[storyIdx].lines.push({ name: "New", text: "새 대사" });
         renderStoriesForm();
@@ -308,7 +300,7 @@
       });
     });
     document.querySelectorAll('.removeLineBtn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', () => {
         const storyIdx = parseInt(btn.dataset.story);
         const lineIdx = parseInt(btn.dataset.line);
         storiesData[storyIdx].lines.splice(lineIdx, 1);
@@ -317,57 +309,48 @@
       });
     });
     storiesContainer.querySelectorAll('.story-title').forEach((input, idx) => {
+      input.addEventListener('input', (e) => { storiesData[idx].title = e.target.value; updateAll(); });
+    });
+    storiesContainer.querySelectorAll('.line-name').forEach((input, idx) => {
+      const storyDiv = input.closest('.story-item');
+      const lineItem = input.closest('.line-item');
+      if (!storyDiv || !lineItem) return;
+      const storyIdx = parseInt(storyDiv.dataset.index);
+      const lineIdx = parseInt(lineItem.dataset.lineidx);
       input.addEventListener('input', (e) => {
-        storiesData[idx].title = e.target.value;
+        if (storiesData[storyIdx]?.lines[lineIdx]) storiesData[storyIdx].lines[lineIdx].name = e.target.value;
         updateAll();
       });
     });
-    storiesContainer.querySelectorAll('.line-name').forEach((input, idx) => {
-      const lineItem = input.closest('.line-item');
-      const storyDiv = input.closest('.story-item');
-      const storyIdx = parseInt(storyDiv.dataset.index);
-      const lineIdx = parseInt(lineItem.dataset.lineidx);
-      input.addEventListener('input', (e) => {
-        if (!isNaN(storyIdx) && storiesData[storyIdx] && storiesData[storyIdx].lines[lineIdx]) {
-          storiesData[storyIdx].lines[lineIdx].name = e.target.value;
-          updateAll();
-        }
-      });
-    });
     storiesContainer.querySelectorAll('.line-text').forEach((input, idx) => {
-      const lineItem = input.closest('.line-item');
       const storyDiv = input.closest('.story-item');
+      const lineItem = input.closest('.line-item');
+      if (!storyDiv || !lineItem) return;
       const storyIdx = parseInt(storyDiv.dataset.index);
       const lineIdx = parseInt(lineItem.dataset.lineidx);
       input.addEventListener('input', (e) => {
-        if (!isNaN(storyIdx) && storiesData[storyIdx] && storiesData[storyIdx].lines[lineIdx]) {
-          storiesData[storyIdx].lines[lineIdx].text = e.target.value;
-          updateAll();
-        }
+        if (storiesData[storyIdx]?.lines[lineIdx]) storiesData[storyIdx].lines[lineIdx].text = e.target.value;
+        updateAll();
       });
     });
-  }
-
-  function escapeHtml(str) {
-    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
   }
 
   document.getElementById('addStoryBtn').addEventListener('click', () => {
-    storiesData.push({
-      title: "새 이야기",
-      lines: [{ name: "캐릭터", text: "대사를 입력하세요" }]
-    });
+    storiesData.push({ title: "새 이야기", lines: [{ name: "캐릭터", text: "대사를 입력하세요" }] });
     renderStoriesForm();
     updateAll();
   });
 
-  // ---------- HTML 생성 엔진 (위젯 전체 코드) ----------
+  // HTML 생성
   function generateWidgetHTML() {
     const chatRoomName = document.getElementById('chatRoomName').value;
     const headerBg = document.getElementById('headerBg').value;
     const chatBg = document.getElementById('chatBg').value;
     const bubbleLeftColor = document.getElementById('bubbleLeftColor').value;
     const bubbleRightColor = document.getElementById('bubbleRightColor').value;
+    const textLeftColor = document.getElementById('textLeftColor').value;
+    const textRightColor = document.getElementById('textRightColor').value;
+    const nameColor = document.getElementById('nameColor').value;
     const btnBg = document.getElementById('btnBg').value;
     const emptyBgUrl = document.getElementById('emptyBgUrl').value;
     const chatBgUrl = document.getElementById('chatBgUrl').value;
@@ -375,9 +358,7 @@
     
     return `<!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   .chat-viewer-widget { all: initial; display: block; max-width: 720px; margin: 0 auto; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; line-height: 1.45; }
   .chat-viewer-widget * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -389,11 +370,11 @@
   .message-bubble-custom { display: flex; flex-direction: column; max-width: 85%; animation: fadeSlide 0.25s ease-out; }
   .message-left { align-items: flex-start; }
   .message-right { align-items: flex-end; margin-left: auto; }
-  .message-name-custom { font-size: 0.8rem; font-weight: 600; color: #e2e8f0; margin-bottom: 0.25rem; margin-left: 0.6rem; margin-right: 0.6rem; text-shadow: 0 1px 1px rgba(0,0,0,0.3); }
+  .message-name-custom { font-size: 0.8rem; font-weight: 600; color: ${nameColor}; margin-bottom: 0.25rem; margin-left: 0.6rem; margin-right: 0.6rem; text-shadow: 0 1px 1px rgba(0,0,0,0.3); }
   .message-right .message-name-custom { text-align: right; margin-right: 0.6rem; margin-left: 0; }
   .bubble-text-custom { padding: 0.75rem 1.1rem; border-radius: 24px; font-size: 1rem; line-height: 1.45; word-break: break-word; box-shadow: 0 1px 0.5px rgba(0,0,0,0.2); }
-  .bubble-left { background: ${bubbleLeftColor}; color: #f0f3fa; border-top-left-radius: 6px; }
-  .bubble-right { background: ${bubbleRightColor}; color: #ffffff; border-top-right-radius: 6px; }
+  .bubble-left { background: ${bubbleLeftColor}; color: ${textLeftColor}; border-top-left-radius: 6px; }
+  .bubble-right { background: ${bubbleRightColor}; color: ${textRightColor}; border-top-right-radius: 6px; }
   @keyframes fadeSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   .empty-chat-custom { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #e2e8f0; gap: 0.7rem; background: rgba(0,0,0,0.4); border-radius: 24px; padding: 1.5rem; }
   .nav-bar-custom { background: #181a1e; padding: 0.7rem 1.2rem; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #26292e; flex-wrap: wrap; }
@@ -463,14 +444,8 @@
       container.scrollTop = 0;
     }
     function reset(){ clearTimeouts(); activeToken++; showEmpty(); }
-    function next(){
-      if(currentIdx===null) loadStory(1);
-      else { let nxt = currentIdx+1; if(nxt>TOTAL) nxt=1; loadStory(nxt); }
-    }
-    function prev(){
-      if(currentIdx===null) return;
-      let prv = currentIdx-1; if(prv<1) prv=TOTAL; loadStory(prv);
-    }
+    function next(){ if(currentIdx===null) loadStory(1); else { let nxt = currentIdx+1; if(nxt>TOTAL) nxt=1; loadStory(nxt); } }
+    function prev(){ if(currentIdx===null) return; let prv = currentIdx-1; if(prv<1) prv=TOTAL; loadStory(prv); }
     function randStory(){ loadStory(Math.floor(Math.random()*TOTAL)+1); }
     document.getElementById('prevBtn').onclick=prev;
     document.getElementById('nextBtn').onclick=next;
@@ -483,51 +458,31 @@
 </html>`;
   }
 
-  // 미리보기 iframe 업데이트
-  function updatePreview() {
-    const fullHtml = generateWidgetHTML();
-    const iframe = document.getElementById('previewIframe');
-    const blob = new Blob([fullHtml], {type: 'text/html'});
-    const url = URL.createObjectURL(blob);
-    iframe.src = url;
-    // 메모리 해제는 iframe 로드 후 약간 지연하여 수행
-    iframe.onload = () => { URL.revokeObjectURL(url); };
-  }
-
   function updateGeneratedCode() {
     const code = generateWidgetHTML();
     document.getElementById('generatedCode').innerText = code;
-    updatePreview();
-  }
-
-  // 복사 및 다운로드
-  document.getElementById('copyCodeBtn').addEventListener('click', () => {
-    const code = document.getElementById('generatedCode').innerText;
-    navigator.clipboard.writeText(code).then(() => alert('✅ HTML 코드가 복사되었습니다. 티스토리 HTML 모드에 붙여넣으세요.'));
-  });
-  document.getElementById('downloadHtmlBtn').addEventListener('click', () => {
-    const code = document.getElementById('generatedCode').innerText;
+    const iframe = document.getElementById('previewIframe');
     const blob = new Blob([code], {type: 'text/html'});
-    const a = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    a.href = url;
-    a.download = 'tistory_chat_widget.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  });
-
-  function updateAll() {
-    updateGeneratedCode();
+    iframe.src = url;
+    iframe.onload = () => URL.revokeObjectURL(url);
   }
 
-  // 모든 입력 변경 감지
-  const inputs = ['chatRoomName', 'headerBg', 'chatBg', 'bubbleLeftColor', 'bubbleRightColor', 'btnBg', 'emptyBgUrl', 'chatBgUrl'];
-  inputs.forEach(id => {
-    document.getElementById(id).addEventListener('input', () => updateAll());
-  });
-  
+  document.getElementById('copyCodeBtn').onclick = () => {
+    navigator.clipboard.writeText(generateWidgetHTML()).then(() => alert('✅ 코드 복사됨'));
+  };
+  document.getElementById('downloadHtmlBtn').onclick = () => {
+    const blob = new Blob([generateWidgetHTML()], {type: 'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'chat_widget.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  function updateAll() { updateGeneratedCode(); }
+  const inputs = ['chatRoomName', 'headerBg', 'chatBg', 'bubbleLeftColor', 'bubbleRightColor', 'textLeftColor', 'textRightColor', 'nameColor', 'btnBg', 'emptyBgUrl', 'chatBgUrl'];
+  inputs.forEach(id => document.getElementById(id).addEventListener('input', updateAll));
   renderStoriesForm();
   updateAll();
 </script>
