@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>🖌️ 카피페 위젯 생성기 (버튼 색상 추가)</title>
+<title>🖌️ 카피페 위젯 생성기 (글씨 크기, 라운드 조절)</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -172,11 +172,17 @@
     margin-bottom: 0.5rem;
   }
   .checkbox-group label { margin-bottom: 0; font-size: 0.8rem; }
+  .range-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .range-group input { flex: 1; }
+  .range-group span { min-width: 3rem; font-size: 0.8rem; }
 </style>
 </head>
 <body>
 <div class="container">
-  <!-- 좌측 폼 -->
   <div class="form-panel">
     <h2 style="font-size: 1.3rem;">🧩 카피페 위젯 생성기</h2>
     <p style="margin-bottom:0.8rem; font-size:0.75rem;">값을 입력하면 오른쪽에 미리보기와 HTML 코드가 실시간 갱신됩니다.</p>
@@ -186,8 +192,10 @@
       <input type="text" id="chatRoomName" value="채팅방">
     </div>
 
-    <div class="section-title">🎨 색상 커스텀</div>
+    <div class="section-title">🎨 디자인 미세조정</div>
     <div class="color-grid">
+      <div class="color-item"><label>전체 글씨 크기 (px)</label><input type="number" id="baseFontSize" value="16" min="12" max="24" step="1"></div>
+      <div class="color-item"><label>카드 모서리 둥글기 (px)</label><input type="number" id="borderRadius" value="20" min="8" max="32" step="2"></div>
       <div class="color-item"><label>헤더 배경</label><input type="color" id="headerBg" value="#ffffff"></div>
       <div class="color-item"><label>대화 배경</label><input type="color" id="chatBg" value="#ffffff"></div>
       <div class="color-item"><label>왼쪽 말풍선</label><input type="color" id="bubbleLeftColor" value="#5294ff"></div>
@@ -224,7 +232,6 @@
     <small>※ 두 번째 화자가 오른쪽 말풍선.<br>프로필 이미지 사용 시 각 캐릭터 URL 입력.</small>
   </div>
 
-  <!-- 우측: 미리보기 + 코드 -->
   <div class="result-panel">
     <div class="preview-container">
       <div class="preview-label">
@@ -238,7 +245,7 @@
       <div><button id="copyCodeBtn" class="copy-btn">📋 복사</button><button id="downloadHtmlBtn" class="download-btn">⬇️ 저장</button></div>
     </div>
     <pre id="generatedCode"></pre>
-    <small>💡 코드를 복사하여 티스토리 HTML 모드에 붙여넣으세요.</small>
+    <small>💡 코드를 복사하여 티스토리 HTML 모드에 붙여넣으세요.<br>※ 기본모드 전환 시 코드가 깨질 수 있으니 주의!</small>
   </div>
 </div>
 
@@ -413,9 +420,11 @@
   useProfileCheckbox.addEventListener('change', () => { updateProfilePanel(); updateAll(); });
   hideEmptyMsgCheckbox.addEventListener('change', () => updateAll());
 
-  // ---------- HTML 생성 (버튼 색상 포함) ----------
+  // ---------- HTML 생성 (글씨 크기, 라운드, 여백 포함) ----------
   function generateWidgetHTML() {
     const chatRoomName = document.getElementById('chatRoomName').value;
+    const baseFontSize = document.getElementById('baseFontSize').value;
+    const borderRadius = document.getElementById('borderRadius').value;
     const headerBg = document.getElementById('headerBg').value;
     const chatBg = document.getElementById('chatBg').value;
     const bubbleLeftColor = document.getElementById('bubbleLeftColor').value;
@@ -444,31 +453,34 @@
 <html>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  .chat-viewer-widget { all: initial; display: block; max-width: 720px; margin: 0 auto; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; line-height: 1.45; }
+  /* 기본 폰트 크기 고정 (외부 영향 제거) */
+  .chat-viewer-widget { all: initial; display: block; max-width: 720px; margin: 1.2rem auto; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; line-height: 1.45; }
   .chat-viewer-widget * { box-sizing: border-box; margin: 0; padding: 0; }
-  .chat-messenger-app { background: #0e0f11; border-radius: 32px; box-shadow: 0 20px 35px -10px rgba(0,0,0,0.5); overflow: hidden; }
-  .chat-header-custom { background: ${headerBg}; padding: 1rem 1.3rem; border-bottom: 1px solid #2a2c30; display: flex; align-items: baseline; justify-content: flex-start; }
-  .chat-title-custom { font-weight: 700; font-size: 1.3rem; color: ${chatTitleColor}; background: none; -webkit-background-clip: unset; }
-  .chat-messages-custom { aspect-ratio: 3/4; width: 100%; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.9rem; background-size: cover; background-position: center; background-repeat: no-repeat; background-color: ${chatBg}; }
-  .story-title-message { text-align: center; margin-bottom: 0.8rem; padding: 0.5rem 1rem; background: rgba(0,0,0,0.7); border-radius: 30px; font-size: 0.9rem; font-weight: 600; color: ${storyTitleColor}; align-self: center; border: 1px solid rgba(255,255,255,0.2); width: fit-content; backdrop-filter: blur(4px); }
-  .message-row { display: flex; align-items: flex-start; gap: 0.6rem; max-width: 100%; }
+  /* 폰트 크기 기준 설정 */
+  .chat-viewer-widget { font-size: ${baseFontSize}px; }
+  .chat-messenger-app { background: #0e0f11; border-radius: ${borderRadius}px; box-shadow: 0 8px 20px rgba(0,0,0,0.25); overflow: hidden; }
+  .chat-header-custom { background: ${headerBg}; padding: 0.8rem 1.2rem; border-bottom: 1px solid #2a2c30; display: flex; align-items: baseline; justify-content: flex-start; }
+  .chat-title-custom { font-weight: 700; font-size: 1.2rem; color: ${chatTitleColor}; background: none; }
+  .chat-messages-custom { aspect-ratio: 3/4; width: 100%; overflow-y: auto; padding: 0.8rem; display: flex; flex-direction: column; gap: 0.8rem; background-size: cover; background-position: center; background-repeat: no-repeat; background-color: ${chatBg}; }
+  .story-title-message { text-align: center; margin-bottom: 0.6rem; padding: 0.4rem 0.8rem; background: rgba(0,0,0,0.7); border-radius: 40px; font-size: 0.85rem; font-weight: 600; color: ${storyTitleColor}; align-self: center; border: 1px solid rgba(255,255,255,0.2); width: fit-content; backdrop-filter: blur(4px); }
+  .message-row { display: flex; align-items: flex-start; gap: 0.5rem; max-width: 100%; }
   .message-row-left { justify-content: flex-start; }
   .message-row-right { justify-content: flex-end; }
-  .avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #334155; flex-shrink: 0; margin-top: 0.2rem; }
-  .message-bubble-custom { display: flex; flex-direction: column; max-width: 75%; animation: fadeSlide 0.25s ease-out; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #334155; flex-shrink: 0; margin-top: 0.2rem; }
+  .message-bubble-custom { display: flex; flex-direction: column; max-width: 80%; animation: fadeSlide 0.25s ease-out; }
   .message-left .message-bubble-custom { align-items: flex-start; }
   .message-right .message-bubble-custom { align-items: flex-end; }
-  .message-name-custom { font-size: 0.75rem; font-weight: 600; color: ${nameColor}; margin-bottom: 0.2rem; margin-left: 0.4rem; margin-right: 0.4rem; }
+  .message-name-custom { font-size: 0.7rem; font-weight: 600; color: ${nameColor}; margin-bottom: 0.15rem; margin-left: 0.3rem; margin-right: 0.3rem; }
   .message-right .message-name-custom { text-align: right; }
-  .bubble-text-custom { padding: 0.6rem 1rem; border-radius: 20px; font-size: 0.95rem; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 0.5px rgba(0,0,0,0.2); }
+  .bubble-text-custom { padding: 0.5rem 0.9rem; border-radius: 18px; font-size: 0.85rem; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 0.5px rgba(0,0,0,0.1); }
   .bubble-left { background: ${bubbleLeftColor}; color: ${textLeftColor}; border-top-left-radius: 4px; }
   .bubble-right { background: ${bubbleRightColor}; color: ${textRightColor}; border-top-right-radius: 4px; }
-  @keyframes fadeSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  .empty-chat-custom { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #e2e8f0; gap: 0.7rem; background: rgba(0,0,0,0.4); border-radius: 24px; padding: 1.5rem; }
-  .nav-bar-custom { background: #181a1e; padding: 0.7rem 1.2rem; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #26292e; flex-wrap: wrap; }
-  .icon-btn-custom { background: ${btnBg}; border: none; width: 44px; height: 44px; border-radius: 32px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: ${btnTextColor}; font-size: 1.35rem; margin-right: 0.5rem; transition: 0.2s; }
+  @keyframes fadeSlide { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .empty-chat-custom { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #e2e8f0; gap: 0.5rem; background: rgba(0,0,0,0.4); border-radius: 20px; padding: 1rem; }
+  .nav-bar-custom { background: #181a1e; padding: 0.5rem 1rem; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #26292e; flex-wrap: wrap; }
+  .icon-btn-custom { background: ${btnBg}; border: none; width: 40px; height: 40px; border-radius: 30px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: ${btnTextColor}; font-size: 1.2rem; margin-right: 0.4rem; transition: 0.2s; }
   .icon-btn-custom:hover { background: ${btnHoverBg}; }
-  .index-badge-custom { background: #0f1115; padding: 0.3rem 0.9rem; border-radius: 40px; font-size: 0.75rem; color: #b9c2d4; }
+  .index-badge-custom { background: #0f1115; padding: 0.2rem 0.7rem; border-radius: 30px; font-size: 0.65rem; color: #b9c2d4; }
   .chat-messages-custom::-webkit-scrollbar { width: 4px; }
 </style>
 <body>
@@ -590,7 +602,7 @@
   function updateAll() {
     updateGeneratedCode();
   }
-  const inputs = ['chatRoomName', 'headerBg', 'chatBg', 'bubbleLeftColor', 'bubbleRightColor', 'textLeftColor', 'textRightColor', 'nameColor', 'btnBg', 'btnTextColor', 'btnHoverBg', 'chatTitleColor', 'storyTitleColor', 'emptyBgUrl', 'chatBgUrl'];
+  const inputs = ['chatRoomName', 'baseFontSize', 'borderRadius', 'headerBg', 'chatBg', 'bubbleLeftColor', 'bubbleRightColor', 'textLeftColor', 'textRightColor', 'nameColor', 'btnBg', 'btnTextColor', 'btnHoverBg', 'chatTitleColor', 'storyTitleColor', 'emptyBgUrl', 'chatBgUrl'];
   inputs.forEach(id => document.getElementById(id).addEventListener('input', updateAll));
   renderStoriesForm();
   updateProfilePanel();
