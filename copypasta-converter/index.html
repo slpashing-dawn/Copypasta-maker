@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📦 카피페 → JSON 코드 변환기 (컴팩트)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f1f5f9;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    padding: 2rem 1rem;
+    color: #0f172a;
+  }
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 2rem;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    padding: 1.5rem;
+  }
+  textarea {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    background: #fefcf5;
+    resize: vertical;
+  }
+  label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  button {
+    background: #0f172a;
+    color: white;
+    border: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-top: 1rem;
+    margin-right: 0.8rem;
+  }
+  button:hover { opacity: 0.85; transform: scale(0.97); }
+  pre {
+    background: #1e293b;
+    padding: 1rem;
+    border-radius: 1rem;
+    overflow-x: auto;
+    font-size: 0.75rem;
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: #e2e8f0;
+    margin-top: 1rem;
+  }
+  .copy-btn {
+    background: #3b82f6;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+  }
+  .example-btn {
+    background: #4b5563;
+    margin-top: 0;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  .flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  hr { margin: 1rem 0; }
+  .help {
+    font-size: 0.75rem;
+    color: #5b6e8c;
+    margin-top: 0.5rem;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>📦 카피페 → JSON 코드 변환기 (컴팩트)</h2>
+  <p style="margin-bottom: 1rem;">아래 텍스트를 입력하면 <code>stories</code> 배열에 추가할 <strong>한 줄 JSON</strong>을 생성합니다.</p>
+
+  <div class="flex-between">
+    <label>✏️ 카피페 텍스트 (여러 개 가능)</label>
+    <button id="exampleBtn" class="example-btn">📋 예시 채우기</button>
+  </div>
+  <textarea id="inputText" rows="12" placeholder="[예시 1번]
+뫄뫄: 이렇게 쓰면
+솨솨: 카피페가 추가됩니다!
+뫄뫄: 이 코드를 복사해서 기존 코드의
+뫄뫄: const stories = [ ~ ] 배열 안에 넣어 주세요. 앞 카피페 뒤에 쉼표 넣고 추가하기!
+
+[예시 2번]
+솨솨: 다만⋯ 이 방식에서도 이미지 기능이 작동하는지는 확인 안 해 봤습니다.
+뫄뫄: 필요하다는 생각이 들면 시도해 볼게용~
+와와: 참고로 티스토리 에디터에서 카피페 포스트에 곧장 수정하는 건 에러 발생 가능성이 높아 비추합니다.
+봐봐: 코드 백업 게시글을 따로 파 두고(코드블럭 안에 코드 복붙해서 백업해두기) 거기에서 수정해 주세요!
+
+  <div style="margin-top: 0.5rem;">
+    <button id="convertBtn">🔄 JSON 코드 생성</button>
+  </div>
+
+  <div class="flex-between" style="margin-top: 1rem;">
+    <label>📋 생성된 JSON (한 줄, 복사해서 stories 배열에 추가)</label>
+    <button id="copyBtn" class="copy-btn">📋 복사</button>
+  </div>
+  <pre id="outputCode">// 결과가 여기에 표시됩니다</pre>
+
+  <hr>
+  <div class="help">
+    💡 사용 방법:<br>
+    1. 카피페를 입력합니다 (각 카피페는 [제목] 줄로 시작).<br>
+    2. 'JSON 코드 생성' 버튼을 누릅니다.<br>
+    3. 생성된 <strong>한 줄 코드</strong>를 복사합니다.<br>
+    4. 원본 위젯 HTML에서 <code>const stories = [ ... ];</code> 배열 안에 (마지막 요소 뒤에 쉼표를 붙이고) 붙여넣습니다.<br>
+    ※ 구분선은 <code>--- 텍스트 ---</code> 형식으로 입력하면 자동 변환됩니다.
+  </div>
+</div>
+
+<script>
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
+  }
+
+  // 여러 카피페 파싱
+  function parseMultipleCopypastas(text) {
+    const lines = text.split(/\r?\n/);
+    const copypastas = [];
+    let currentTitle = null;
+    let currentLines = [];
+    let inTitle = false;
+    
+    for (let raw of lines) {
+      let line = raw.trim();
+      if (line === "") {
+        if (currentTitle && currentLines.length > 0) {
+          copypastas.push({ title: currentTitle, lines: [...currentLines] });
+          currentTitle = null;
+          currentLines = [];
+          inTitle = false;
+        }
+        continue;
+      }
+      
+      if (line.startsWith('[') && line.endsWith(']')) {
+        if (currentTitle && currentLines.length > 0) {
+          copypastas.push({ title: currentTitle, lines: [...currentLines] });
+        }
+        currentTitle = line.slice(1, -1);
+        currentLines = [];
+        inTitle = true;
+        continue;
+      }
+      
+      if (inTitle) {
+        let colonIndex = line.indexOf(':');
+        if (colonIndex !== -1) {
+          let name = line.substring(0, colonIndex).trim();
+          let text = line.substring(colonIndex + 1).trim();
+          if (name && text) {
+            if (text.match(/^---?\s*.*\s*---?$/)) {
+              let sepText = text.replace(/^---?\s*/, '').replace(/\s*---?$/, '');
+              currentLines.push({ type: "separator", text: sepText });
+            } else {
+              currentLines.push({ type: "text", name, text });
+            }
+          }
+        } else if (line.match(/^---?\s*.*\s*---?$/)) {
+          let sepText = line.replace(/^---?\s*/, '').replace(/\s*---?$/, '');
+          currentLines.push({ type: "separator", text: sepText });
+        }
+      }
+    }
+    if (currentTitle && currentLines.length > 0) {
+      copypastas.push({ title: currentTitle, lines: currentLines });
+    }
+    return copypastas;
+  }
+
+  // 컴팩트 JSON 생성 (한 줄, 공백 없음)
+  function generateCompactJSON(copypastas) {
+    if (copypastas.length === 0) return null;
+    if (copypastas.length === 1) {
+      return JSON.stringify(copypastas[0]);
+    } else {
+      return JSON.stringify(copypastas);
+    }
+  }
+
+  function convert() {
+    const rawText = document.getElementById('inputText').value;
+    const copypastas = parseMultipleCopypastas(rawText);
+    if (copypastas.length === 0) {
+      alert('유효한 카피페를 찾을 수 없습니다. [제목]과 "이름: 대사" 형식을 확인하세요.');
+      document.getElementById('outputCode').innerText = '// 유효한 카피페가 없습니다';
+      return;
+    }
+    const jsonCode = generateCompactJSON(copypastas);
+    document.getElementById('outputCode').innerText = jsonCode;
+  }
+
+  function fillExample() {
+    document.getElementById('inputText').value = `[The Snack Thief]
+Dick: (reaching for the last cookie)
+Aiden: (slaps his hand)
+Dick: "Ow."
+Aiden: "That's mine."
+
+[Late Night Feels]
+Dick: Love you...
+Aiden: You're just saying that because you're sleepy.
+Dick: Nah... saying it because it's true.
+Aiden: Dumbass.
+Dick: Yours.`;
+    convert();
+  }
+
+  document.getElementById('convertBtn').addEventListener('click', convert);
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    const code = document.getElementById('outputCode').innerText;
+    if (code && code !== '// 결과가 여기에 표시됩니다' && code !== '// 유효한 카피페가 없습니다') {
+      navigator.clipboard.writeText(code).then(() => alert('✅ JSON 코드가 복사되었습니다.'));
+    } else {
+      alert('먼저 변환 버튼을 눌러주세요.');
+    }
+  });
+  document.getElementById('exampleBtn').addEventListener('click', fillExample);
+  
+  fillExample(); // 초기 예시
+</script>
+</body>
+</html>
