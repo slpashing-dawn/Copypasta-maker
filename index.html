@@ -2,655 +2,246 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>🖌️ 카피페 위젯 생성기 (이미지 내보내기 추가)</title>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📦 카피페 → JSON 코드 변환기 (컴팩트)</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: #f1f5f9;
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     padding: 2rem 1rem;
     color: #0f172a;
   }
   .container {
-    max-width: 1600px;
+    max-width: 1000px;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    align-items: start;
-  }
-  @media (max-width: 1000px) { .container { grid-template-columns: 1fr; } }
-  
-  .form-panel {
     background: white;
     border-radius: 2rem;
     box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-    padding: 1.2rem;
-    border: 1px solid #e2e8f0;
-    max-height: 90vh;
-    overflow-y: auto;
+    padding: 1.5rem;
   }
-  .form-group { margin-bottom: 1rem; }
-  label { font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 0.2rem; color: #1e293b; }
-  input, textarea, select {
+  textarea {
     width: 100%;
-    padding: 0.5rem 0.7rem;
+    padding: 0.8rem;
     border: 1px solid #cbd5e1;
     border-radius: 1rem;
+    font-family: 'Courier New', monospace;
     font-size: 0.85rem;
     background: #fefcf5;
+    resize: vertical;
   }
-  .color-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.8rem;
-  }
-  .color-item {
-    background: #f8fafc;
-    padding: 0.4rem;
-    border-radius: 1rem;
-  }
-  .color-item label { font-size: 0.7rem; margin-bottom: 0.1rem; }
-  .color-item input { padding: 0.2rem; height: 2rem; }
-  
-  .section-title {
-    font-size: 1rem;
-    font-weight: 700;
-    margin: 1rem 0 0.6rem 0;
-    border-left: 3px solid #3b82f6;
-    padding-left: 0.7rem;
+  label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 0.5rem;
   }
   button {
     background: #0f172a;
     color: white;
     border: none;
-    padding: 0.4rem 1rem;
+    padding: 0.5rem 1.2rem;
     border-radius: 2rem;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     transition: 0.2s;
-    margin-right: 0.5rem;
-    margin-top: 0.3rem;
-    font-size: 0.8rem;
+    margin-top: 1rem;
+    margin-right: 0.8rem;
   }
   button:hover { opacity: 0.85; transform: scale(0.97); }
-  .story-item {
-    background: #f8fafc;
-    border-radius: 1rem;
-    padding: 0.8rem;
-    margin-bottom: 0.8rem;
-    border: 1px solid #e2e8f0;
-  }
-  .line-item {
-    display: flex;
-    gap: 0.4rem;
-    margin-bottom: 0.5rem;
-    align-items: center;
-  }
-  .line-item input { flex: 1; font-size: 0.8rem; }
-  .line-item button {
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    background: #dc2626;
-    border-radius: 30px;
-  }
-  
-  .result-panel {
-    background: #0f172a;
-    border-radius: 2rem;
+  pre {
+    background: #1e293b;
     padding: 1rem;
+    border-radius: 1rem;
+    overflow-x: auto;
+    font-size: 0.75rem;
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
     color: #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    margin-top: 1rem;
   }
-  .code-header {
+  .copy-btn {
+    background: #3b82f6;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+  }
+  .example-btn {
+    background: #4b5563;
+    margin-top: 0;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  .flex-between {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  hr { margin: 1rem 0; }
+  .help {
+    font-size: 0.75rem;
+    color: #5b6e8c;
     margin-top: 0.5rem;
   }
-  pre {
-    background: #1e293b;
-    padding: 0.8rem;
-    border-radius: 1rem;
-    overflow-x: auto;
-    font-size: 0.65rem;
-    font-family: monospace;
-    white-space: pre-wrap;
-    word-break: break-all;
-    max-height: 38vh;
-  }
-  .preview-container {
-    background: #0b0c0e;
-    border-radius: 1.2rem;
-    padding: 0.6rem;
-    border: 1px solid #334155;
-  }
-  .preview-label {
-    font-size: 0.7rem;
-    margin-bottom: 0.4rem;
-    color: #94a3b8;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  iframe {
-    width: 100%;
-    background: #0e0f11;
-    border-radius: 0.8rem;
-    border: none;
-    display: block;
-    aspect-ratio: 3/4;
-    max-width: 500px;
-    margin: 0 auto;
-  }
-  .copy-btn, .download-btn, .export-img-btn { background: #3b82f6; border: none; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.7rem; margin-left: 0.3rem; }
-  .export-img-btn { background: #10b981; }
-  hr { margin: 0.8rem 0; border-color: #334155; }
-  small { font-size: 0.7rem; color: #94a3b8; }
-  .character-list {
-    background: #f1f5f9;
-    border-radius: 1rem;
-    padding: 0.6rem;
-    margin-top: 0.3rem;
-  }
-  .char-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.4rem;
-  }
-  .char-name { width: 100px; font-weight: 600; font-size: 0.75rem; }
-  .char-img-url { flex: 1; font-size: 0.75rem; }
-  .checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.2rem;
-    margin-bottom: 0.5rem;
-  }
-  .checkbox-group label { margin-bottom: 0; font-size: 0.8rem; }
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="form-panel">
-    <h2 style="font-size: 1.3rem;">🧩 카피페 위젯 생성기 (이미지 내보내기)</h2>
-    <p style="margin-bottom:0.8rem; font-size:0.75rem;">값을 입력하면 오른쪽에 미리보기와 HTML 코드가 실시간 갱신됩니다.</p>
+  <h2>📦 카피페 → JSON 코드 변환기 (컴팩트)</h2>
+  <p style="margin-bottom: 1rem;">아래 텍스트를 입력하면 <code>stories</code> 배열에 추가할 <strong>한 줄 JSON</strong>을 생성합니다.</p>
 
-    <div class="form-group">
-      <label>🏷️ 채팅방 이름</label>
-      <input type="text" id="chatRoomName" value="채팅방">
-    </div>
+  <div class="flex-between">
+    <label>✏️ 카피페 텍스트 (여러 개 가능)</label>
+    <button id="exampleBtn" class="example-btn">📋 예시 채우기</button>
+  </div>
+  <textarea id="inputText" rows="12" placeholder="[The Snack Thief]
+Dick: (reaching for the last cookie)
+Aiden: (slaps his hand)
+Dick: &quot;Ow.&quot;
+Aiden: &quot;That's mine.&quot;
 
-    <div class="section-title">🎨 디자인 미세조정</div>
-    <div class="color-grid">
-      <div class="color-item"><label>전체 글씨 크기 (px)</label><input type="number" id="baseFontSize" value="16" min="12" max="24" step="1"></div>
-      <div class="color-item"><label>카드 모서리 둥글기 (px)</label><input type="number" id="borderRadius" value="20" min="8" max="32" step="2"></div>
-      <div class="color-item"><label>헤더 배경</label><input type="color" id="headerBg" value="#ffffff"></div>
-      <div class="color-item"><label>대화 배경</label><input type="color" id="chatBg" value="#ffffff"></div>
-      <div class="color-item"><label>왼쪽 말풍선</label><input type="color" id="bubbleLeftColor" value="#5294ff"></div>
-      <div class="color-item"><label>오른쪽 말풍선</label><input type="color" id="bubbleRightColor" value="#7a008a"></div>
-      <div class="color-item"><label>왼쪽 글자색</label><input type="color" id="textLeftColor" value="#ffffff"></div>
-      <div class="color-item"><label>오른쪽 글자색</label><input type="color" id="textRightColor" value="#ffffff"></div>
-      <div class="color-item"><label>이름 색상</label><input type="color" id="nameColor" value="#000000"></div>
-      <div class="color-item"><label>버튼 배경</label><input type="color" id="btnBg" value="#ffffff"></div>
-      <div class="color-item"><label>버튼 글자색</label><input type="color" id="btnTextColor" value="#000000"></div>
-      <div class="color-item"><label>버튼 호버 배경</label><input type="color" id="btnHoverBg" value="#d1d5db"></div>
-      <div class="color-item"><label>채팅방 이름 글자색</label><input type="color" id="chatTitleColor" value="#000000"></div>
-      <div class="color-item"><label>카피페 제목 글자색</label><input type="color" id="storyTitleColor" value="#cbd5e6"></div>
-    </div>
+[Late Night Feels]
+Dick: Love you...
+Aiden: You're just saying that because you're sleepy.
+Dick: Nah... saying it because it's true.
+Aiden: Dumbass.
+Dick: Yours."></textarea>
 
-    <div class="section-title">🖼️ 배경 이미지 (URL)</div>
-    <div class="form-group"><label>초기 빈 화면 배경</label><input type="text" id="emptyBgUrl" placeholder="https://..."></div>
-    <div class="form-group"><label>대화 표시 중 배경</label><input type="text" id="chatBgUrl" placeholder="https://..."></div>
-    <div class="checkbox-group">
-      <input type="checkbox" id="hideEmptyMessage">
-      <label>✨ 빈 화면 메시지 숨기기 (배경만 보임)</label>
-    </div>
-
-    <div class="section-title">👤 프로필 이미지</div>
-    <div class="checkbox-group" style="margin-bottom:0.5rem;">
-      <input type="checkbox" id="useProfileImages">
-      <label>프로필 이미지 사용 (캐릭터별)</label>
-    </div>
-    <div id="profileImagesPanel" style="display: none;"></div>
-
-    <div class="section-title">📚 카피페 데이터</div>
-    <div id="storiesContainer"></div>
-    <button id="addStoryBtn" style="background:#2563eb;">➕ 카피페 추가</button>
-    <hr>
-    <small>※ 두 번째 화자가 오른쪽 말풍선.<br>프로필 이미지 사용 시 각 캐릭터 URL 입력.<br>✨ 대사에 이미지 URL(https://...jpg, .png, .gif, .webp)을 넣으면 자동으로 이미지로 표시됩니다.</small>
+  <div style="margin-top: 0.5rem;">
+    <button id="convertBtn">🔄 JSON 코드 생성</button>
   </div>
 
-  <div class="result-panel">
-    <div class="preview-container">
-      <div class="preview-label">
-        <span>🖥️ 실시간 미리보기 (3:4)</span>
-        <div>
-          <button id="exportImageBtn" class="export-img-btn" style="background:#10b981;">📸 현재 화면 이미지 저장</button>
-          <span style="font-size:0.6rem; margin-left:0.3rem;">버튼/랜덤 동작 확인</span>
-        </div>
-      </div>
-      <iframe id="previewIframe" title="Preview" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"></iframe>
-    </div>
-    <div class="code-header">
-      <strong>📋 생성된 HTML 코드 (티스토리용)</strong>
-      <div><button id="copyCodeBtn" class="copy-btn">📋 복사</button><button id="downloadHtmlBtn" class="download-btn">⬇️ 저장</button></div>
-    </div>
-    <pre id="generatedCode"></pre>
-    <small>💡 코드를 복사하여 티스토리 HTML 모드에 붙여넣으세요.<br>※ 기본모드 전환 시 코드가 깨질 수 있으니 주의!</small>
+  <div class="flex-between" style="margin-top: 1rem;">
+    <label>📋 생성된 JSON (한 줄, 복사해서 stories 배열에 추가)</label>
+    <button id="copyBtn" class="copy-btn">📋 복사</button>
+  </div>
+  <pre id="outputCode">// 결과가 여기에 표시됩니다</pre>
+
+  <hr>
+  <div class="help">
+    💡 사용 방법:<br>
+    1. 카피페를 입력합니다 (각 카피페는 [제목] 줄로 시작).<br>
+    2. 'JSON 코드 생성' 버튼을 누릅니다.<br>
+    3. 생성된 <strong>한 줄 코드</strong>를 복사합니다.<br>
+    4. 원본 위젯 HTML에서 <code>const stories = [ ... ];</code> 배열 안에 (마지막 요소 뒤에 쉼표를 붙이고) 붙여넣습니다.<br>
+    ※ 구분선은 <code>--- 텍스트 ---</code> 형식으로 입력하면 자동 변환됩니다.
   </div>
 </div>
 
 <script>
-  // 예시 카피페 데이터
-  let storiesData = [
-    { 
-      title: "예시1", 
-      lines: [
-        { name: "뫄뫄", text: "이것저것 써 봅시다." },
-        { name: "솨솨", text: "두 번째 대사 캐릭터가 발신인 고정!" },
-        { name: "뫄뫄", text: "긴 텍스트도 문제 없습니다. 엄청나게 길다면 그때는 또 모르겠지만⋯ 자컾 카피페 백업용으로 만들기 시작했고 이후에도 ‘캐릭터들끼리 채팅 하는 거 보고싶다’는 생각 정도만 있기에 엄청나게 긴 글을 작성하셨을 때 에러가 발생한다면 저도 잘 모릅니다⋯." },
-        { name: "솨솨", text: "제작자는 코딩 문외한에 가까우며, 디자인만 직접 하고 코딩은 99%를 ai의 도움을 받았습니다. 혹시 오류가 발생한다면⋯ 일단 문의는 주세요. 다시 ai를 개 패보겠습니다." }
-      ]
-    },
-    { 
-      title: "예시2", 
-      lines: [
-        { name: "뫄뫄", text: "여러 명도 채팅 가능합니다!" },
-        { name: "뫄뫄", text: "다인관을 좋아하다 보니 포기할 수 없는 기능이었습니다." },
-        { name: "봐봐", text: "다만 인원이 엄청나게 많아지면 프로필 사진 설정 시 설정탭 스크롤이 길어질 듯합니다. 근데 이건 카피페 분량이 많아도 마찬가지라⋯." },
-        { name: "와와", text: "https://picsum.photos/200/150" }
-      ]
-    }
-  ];
-
-  let characterImages = {};
-
-  const storiesContainer = document.getElementById('storiesContainer');
-  const useProfileCheckbox = document.getElementById('useProfileImages');
-  const profilePanel = document.getElementById('profileImagesPanel');
-  const hideEmptyMsgCheckbox = document.getElementById('hideEmptyMessage');
-  const previewIframe = document.getElementById('previewIframe');
-  const exportBtn = document.getElementById('exportImageBtn');
-
   function escapeHtml(str) {
+    if (!str) return '';
     return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
   }
 
-  function getUniqueCharacters() {
-    const names = new Set();
-    storiesData.forEach(story => {
-      story.lines.forEach(line => { if (line.name) names.add(line.name); });
-    });
-    return Array.from(names).sort();
+  // 여러 카피페 파싱
+  function parseMultipleCopypastas(text) {
+    const lines = text.split(/\r?\n/);
+    const copypastas = [];
+    let currentTitle = null;
+    let currentLines = [];
+    let inTitle = false;
+    
+    for (let raw of lines) {
+      let line = raw.trim();
+      if (line === "") {
+        if (currentTitle && currentLines.length > 0) {
+          copypastas.push({ title: currentTitle, lines: [...currentLines] });
+          currentTitle = null;
+          currentLines = [];
+          inTitle = false;
+        }
+        continue;
+      }
+      
+      if (line.startsWith('[') && line.endsWith(']')) {
+        if (currentTitle && currentLines.length > 0) {
+          copypastas.push({ title: currentTitle, lines: [...currentLines] });
+        }
+        currentTitle = line.slice(1, -1);
+        currentLines = [];
+        inTitle = true;
+        continue;
+      }
+      
+      if (inTitle) {
+        let colonIndex = line.indexOf(':');
+        if (colonIndex !== -1) {
+          let name = line.substring(0, colonIndex).trim();
+          let text = line.substring(colonIndex + 1).trim();
+          if (name && text) {
+            if (text.match(/^---?\s*.*\s*---?$/)) {
+              let sepText = text.replace(/^---?\s*/, '').replace(/\s*---?$/, '');
+              currentLines.push({ type: "separator", text: sepText });
+            } else {
+              currentLines.push({ type: "text", name, text });
+            }
+          }
+        } else if (line.match(/^---?\s*.*\s*---?$/)) {
+          let sepText = line.replace(/^---?\s*/, '').replace(/\s*---?$/, '');
+          currentLines.push({ type: "separator", text: sepText });
+        }
+      }
+    }
+    if (currentTitle && currentLines.length > 0) {
+      copypastas.push({ title: currentTitle, lines: currentLines });
+    }
+    return copypastas;
   }
 
-  function updateProfilePanel() {
-    const useImages = useProfileCheckbox.checked;
-    profilePanel.style.display = useImages ? 'block' : 'none';
-    if (!useImages) return;
-    const chars = getUniqueCharacters();
-    if (chars.length === 0) {
-      profilePanel.innerHTML = '<div class="character-list">⚠️ 캐릭터가 없습니다. 카피페를 추가해주세요.</div>';
+  // 컴팩트 JSON 생성 (한 줄, 공백 없음)
+  function generateCompactJSON(copypastas) {
+    if (copypastas.length === 0) return null;
+    if (copypastas.length === 1) {
+      return JSON.stringify(copypastas[0]);
+    } else {
+      return JSON.stringify(copypastas);
+    }
+  }
+
+  function convert() {
+    const rawText = document.getElementById('inputText').value;
+    const copypastas = parseMultipleCopypastas(rawText);
+    if (copypastas.length === 0) {
+      alert('유효한 카피페를 찾을 수 없습니다. [제목]과 "이름: 대사" 형식을 확인하세요.');
+      document.getElementById('outputCode').innerText = '// 유효한 카피페가 없습니다';
       return;
     }
-    let html = '<div class="character-list">';
-    chars.forEach(char => {
-      const currentUrl = characterImages[char] || '';
-      html += `
-        <div class="char-item">
-          <div class="char-name">${escapeHtml(char)}</div>
-          <input type="text" class="char-img-url" data-char="${escapeHtml(char)}" value="${escapeHtml(currentUrl)}" placeholder="이미지 URL" style="flex:1; font-size:0.75rem;">
-        </div>
-      `;
-    });
-    html += '</div>';
-    profilePanel.innerHTML = html;
-    document.querySelectorAll('.char-img-url').forEach(input => {
-      input.addEventListener('input', (e) => {
-        const char = input.dataset.char;
-        characterImages[char] = input.value;
-        updateAll();
-      });
-    });
+    const jsonCode = generateCompactJSON(copypastas);
+    document.getElementById('outputCode').innerText = jsonCode;
   }
 
-  function renderStoriesForm() {
-    storiesContainer.innerHTML = '';
-    storiesData.forEach((story, idx) => {
-      const storyDiv = document.createElement('div');
-      storyDiv.className = 'story-item';
-      storyDiv.dataset.index = idx;
-      storyDiv.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <strong>📖 카피페 ${idx+1}</strong>
-          <button class="removeStoryBtn" data-idx="${idx}" style="background:#b91c1c; padding:0.2rem 0.6rem;">삭제</button>
-        </div>
-        <div class="form-group" style="margin-top:0.3rem;">
-          <label>제목</label>
-          <input type="text" class="story-title" value="${escapeHtml(story.title)}">
-        </div>
-        <div class="lines-container" data-story="${idx}">
-          ${story.lines.map((line, lineIdx) => `
-            <div class="line-item" data-lineidx="${lineIdx}">
-              <input type="text" placeholder="이름" class="line-name" value="${escapeHtml(line.name)}" style="width:30%;">
-              <input type="text" placeholder="대사 내용" class="line-text" value="${escapeHtml(line.text)}" style="width:65%;">
-              <button class="removeLineBtn" data-story="${idx}" data-line="${lineIdx}">✖</button>
-            </div>
-          `).join('')}
-        </div>
-        <button class="addLineBtn" data-story="${idx}" style="background:#334155; margin-top:0.2rem;">+ 대사 추가</button>
-      `;
-      storiesContainer.appendChild(storyDiv);
-    });
-    attachStoryEvents();
+  function fillExample() {
+    document.getElementById('inputText').value = `[The Snack Thief]
+Dick: (reaching for the last cookie)
+Aiden: (slaps his hand)
+Dick: "Ow."
+Aiden: "That's mine."
+
+[Late Night Feels]
+Dick: Love you...
+Aiden: You're just saying that because you're sleepy.
+Dick: Nah... saying it because it's true.
+Aiden: Dumbass.
+Dick: Yours.`;
+    convert();
   }
 
-  function attachStoryEvents() {
-    document.querySelectorAll('.removeStoryBtn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.idx);
-        storiesData.splice(idx, 1);
-        renderStoriesForm();
-        updateProfilePanel();
-        updateAll();
-      });
-    });
-    document.querySelectorAll('.addLineBtn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const storyIdx = parseInt(btn.dataset.story);
-        storiesData[storyIdx].lines.push({ name: "New", text: "새 대사" });
-        renderStoriesForm();
-        updateProfilePanel();
-        updateAll();
-      });
-    });
-    document.querySelectorAll('.removeLineBtn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const storyIdx = parseInt(btn.dataset.story);
-        const lineIdx = parseInt(btn.dataset.line);
-        storiesData[storyIdx].lines.splice(lineIdx, 1);
-        renderStoriesForm();
-        updateProfilePanel();
-        updateAll();
-      });
-    });
-    storiesContainer.querySelectorAll('.story-title').forEach((input, idx) => {
-      input.addEventListener('input', (e) => { storiesData[idx].title = e.target.value; updateAll(); });
-    });
-    storiesContainer.querySelectorAll('.line-name').forEach((input) => {
-      const storyDiv = input.closest('.story-item');
-      const lineItem = input.closest('.line-item');
-      if (!storyDiv || !lineItem) return;
-      const storyIdx = parseInt(storyDiv.dataset.index);
-      const lineIdx = parseInt(lineItem.dataset.lineidx);
-      input.addEventListener('input', (e) => {
-        if (storiesData[storyIdx]?.lines[lineIdx]) {
-          storiesData[storyIdx].lines[lineIdx].name = e.target.value;
-        }
-        updateProfilePanel();
-        updateAll();
-      });
-    });
-    storiesContainer.querySelectorAll('.line-text').forEach((input) => {
-      const storyDiv = input.closest('.story-item');
-      const lineItem = input.closest('.line-item');
-      if (!storyDiv || !lineItem) return;
-      const storyIdx = parseInt(storyDiv.dataset.index);
-      const lineIdx = parseInt(lineItem.dataset.lineidx);
-      input.addEventListener('input', (e) => {
-        if (storiesData[storyIdx]?.lines[lineIdx]) storiesData[storyIdx].lines[lineIdx].text = e.target.value;
-        updateAll();
-      });
-    });
-  }
-
-  document.getElementById('addStoryBtn').addEventListener('click', () => {
-    storiesData.push({ title: "새 이야기", lines: [{ name: "캐릭터", text: "대사를 입력하세요" }] });
-    renderStoriesForm();
-    updateProfilePanel();
-    updateAll();
+  document.getElementById('convertBtn').addEventListener('click', convert);
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    const code = document.getElementById('outputCode').innerText;
+    if (code && code !== '// 결과가 여기에 표시됩니다' && code !== '// 유효한 카피페가 없습니다') {
+      navigator.clipboard.writeText(code).then(() => alert('✅ JSON 코드가 복사되었습니다.'));
+    } else {
+      alert('먼저 변환 버튼을 눌러주세요.');
+    }
   });
-  useProfileCheckbox.addEventListener('change', () => { updateProfilePanel(); updateAll(); });
-  hideEmptyMsgCheckbox.addEventListener('change', () => updateAll());
-
-  // ---------- HTML 생성 (이미지 자동 감지 포함) ----------
-  function generateWidgetHTML() {
-    const chatRoomName = document.getElementById('chatRoomName').value;
-    const baseFontSize = document.getElementById('baseFontSize').value;
-    const borderRadius = document.getElementById('borderRadius').value;
-    const headerBg = document.getElementById('headerBg').value;
-    const chatBg = document.getElementById('chatBg').value;
-    const bubbleLeftColor = document.getElementById('bubbleLeftColor').value;
-    const bubbleRightColor = document.getElementById('bubbleRightColor').value;
-    const textLeftColor = document.getElementById('textLeftColor').value;
-    const textRightColor = document.getElementById('textRightColor').value;
-    const nameColor = document.getElementById('nameColor').value;
-    const btnBg = document.getElementById('btnBg').value;
-    const btnTextColor = document.getElementById('btnTextColor').value;
-    const btnHoverBg = document.getElementById('btnHoverBg').value;
-    const chatTitleColor = document.getElementById('chatTitleColor').value;
-    const storyTitleColor = document.getElementById('storyTitleColor').value;
-    const emptyBgUrl = document.getElementById('emptyBgUrl').value;
-    const chatBgUrl = document.getElementById('chatBgUrl').value;
-    const useProfile = useProfileCheckbox.checked;
-    const hideMessage = hideEmptyMsgCheckbox.checked;
-    const charImages = useProfile ? characterImages : {};
-    const storiesJson = JSON.stringify(storiesData);
-    const charImagesJson = JSON.stringify(charImages);
-    
-    const showEmptyFuncBody = hideMessage ? 
-      `function showEmpty(){ container.innerHTML=''; setBg('empty'); indexSpan.innerText='⚡ 대기 ('+TOTAL+'개)'; currentIdx=null; }` :
-      `function showEmpty(){ container.innerHTML='<div class="empty-chat-custom">💬 대화를 불러오세요<br><span style="font-size:0.8em;">◀ ▶ | 🎲 random</span></div>'; setBg('empty'); indexSpan.innerText='⚡ 대기 ('+TOTAL+'개)'; currentIdx=null; }`;
-    
-    return `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-  .chat-viewer-widget { all: initial; display: block; max-width: 720px; margin: 1.2rem auto; line-height: 1.45; }
-  .chat-viewer-widget * { box-sizing: border-box; margin: 0; padding: 0; }
-  .chat-viewer-widget { font-size: ${baseFontSize}px; }
+  document.getElementById('exampleBtn').addEventListener('click', fillExample);
   
-  .chat-messenger-app { background: #0e0f11; border-radius: ${borderRadius}px; box-shadow: 0 8px 20px rgba(0,0,0,0.25); overflow: hidden; }
-  .chat-header-custom { background: ${headerBg}; padding: 0.8em 1.2em; border-bottom: 1px solid #2a2c30; display: flex; align-items: baseline; justify-content: flex-start; }
-  .chat-title-custom { font-weight: 700; font-size: 1.2em; color: ${chatTitleColor}; background: none; }
-  .chat-messages-custom { aspect-ratio: 3/4; width: 100%; overflow-y: auto; padding: 0.8em; display: flex; flex-direction: column; gap: 0.8em; background-size: cover; background-position: center; background-repeat: no-repeat; background-color: ${chatBg}; }
-  .story-title-message { text-align: center; margin-bottom: 0.6em; padding: 0.4em 0.8em; background: rgba(0,0,0,0.7); border-radius: 2em; font-size: 0.9em; font-weight: 600; color: ${storyTitleColor}; align-self: center; border: 1px solid rgba(255,255,255,0.2); width: fit-content; backdrop-filter: blur(4px); }
-  .message-row { display: flex; align-items: flex-start; gap: 0.5em; max-width: 100%; }
-  .message-row-left { justify-content: flex-start; }
-  .message-row-right { justify-content: flex-end; }
-  .avatar { width: 2em; height: 2em; border-radius: 50%; object-fit: cover; background: #334155; flex-shrink: 0; margin-top: 0.2em; }
-  .message-bubble-custom { display: flex; flex-direction: column; max-width: 80%; animation: fadeSlide 0.25s ease-out; }
-  .message-left .message-bubble-custom { align-items: flex-start; }
-  .message-right .message-bubble-custom { align-items: flex-end; }
-  .message-name-custom { font-size: 0.7em; font-weight: 600; color: ${nameColor}; margin-bottom: 0.15em; margin-left: 0.3em; margin-right: 0.3em; }
-  .message-right .message-name-custom { text-align: right; }
-  .bubble-text-custom { padding: 0.5em 0.9em; border-radius: 1.2em; font-size: 0.9em; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 0.5px rgba(0,0,0,0.1); }
-  .bubble-left { background: ${bubbleLeftColor}; color: ${textLeftColor}; border-top-left-radius: 0.2em; }
-  .bubble-right { background: ${bubbleRightColor}; color: ${textRightColor}; border-top-right-radius: 0.2em; }
-  .chat-image { max-width: 100%; max-height: 200px; border-radius: 0.8em; cursor: pointer; display: block; margin: 0.2em 0; }
-  @keyframes fadeSlide { from { opacity: 0; transform: translateY(0.3em); } to { opacity: 1; transform: translateY(0); } }
-  .empty-chat-custom { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #e2e8f0; gap: 0.5em; background: rgba(0,0,0,0.4); border-radius: 1.2em; padding: 1em; font-size: 0.9em; }
-  .nav-bar-custom { background: #181a1e; padding: 0.5em 1em; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #26292e; flex-wrap: wrap; }
-  .icon-btn-custom { background: ${btnBg}; border: none; width: 2.5em; height: 2.5em; border-radius: 2em; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: ${btnTextColor}; font-size: 1.1em; margin-right: 0.4em; transition: 0.2s; }
-  .icon-btn-custom:hover { background: ${btnHoverBg}; }
-  .index-badge-custom { background: #0f1115; padding: 0.2em 0.7em; border-radius: 2em; font-size: 0.7em; color: #b9c2d4; }
-  .chat-messages-custom::-webkit-scrollbar { width: 4px; }
-</style>
-<body>
-<div class="chat-viewer-widget">
-  <div class="chat-messenger-app">
-    <div class="chat-header-custom"><span class="chat-title-custom">${escapeHtml(chatRoomName)}</span></div>
-    <div id="widgetChatArea" class="chat-messages-custom" style="${emptyBgUrl ? `background-image: url('${emptyBgUrl}');` : ''}"></div>
-    <div class="nav-bar-custom">
-      <div><button class="icon-btn-custom" id="prevBtn">◀</button><button class="icon-btn-custom" id="nextBtn">▶</button></div>
-      <div><button class="icon-btn-custom" id="randomBtn">🎲</button><button class="icon-btn-custom" id="resetBtn">⟳</button></div>
-      <div class="index-badge-custom" id="indexBadge">대기중</div>
-    </div>
-  </div>
-</div>
-<script>
-  (function(){
-    const stories = ${storiesJson};
-    const TOTAL = stories.length;
-    let currentIdx = null, activeToken = 0, pending = [];
-    const emptyBg = "${emptyBgUrl.replace(/\\/g, '\\\\')}", chatBg = "${chatBgUrl.replace(/\\/g, '\\\\')}";
-    const useProfile = ${useProfile};
-    const charImages = ${charImagesJson};
-    const container = document.getElementById('widgetChatArea');
-    const indexSpan = document.getElementById('indexBadge');
-    function clearTimeouts(){ for(let t of pending) clearTimeout(t); pending=[]; }
-    function setBg(state){ let url = state==='empty' ? emptyBg : chatBg; if(url && url.trim()) container.style.backgroundImage = "url('"+url+"')"; else container.style.backgroundImage="none"; container.style.backgroundColor="${chatBg}"; }
-    ${showEmptyFuncBody}
-    function escapeHtml(s){ return s.replace(/[&<>]/g, m=> m==='&'?'&amp;':(m==='<'?'&lt;':'&gt;')); }
-    function isImageUrl(url) {
-      return /^https?:\\/\\/[^\\s]+\\.(jpg|jpeg|png|gif|webp)(\\?.*)?$/i.test(url);
-    }
-    function formatMessageContent(text) {
-      if (isImageUrl(text)) {
-        return '<img src="'+escapeHtml(text)+'" class="chat-image" onclick="window.open(this.src)" loading="lazy">';
-      }
-      return escapeHtml(text);
-    }
-    function addMsg(name, text, isRight){
-      const row = document.createElement('div');
-      row.className = "message-row " + (isRight ? "message-row-right" : "message-row-left");
-      const bubbleDiv = document.createElement('div');
-      bubbleDiv.className = "message-bubble-custom " + (isRight ? "message-right" : "message-left");
-      const formattedContent = formatMessageContent(text);
-      bubbleDiv.innerHTML = '<div class="message-name-custom">'+escapeHtml(name)+'</div><div class="bubble-text-custom '+(isRight?"bubble-right":"bubble-left")+'">'+formattedContent+'</div>';
-      if(useProfile && charImages[name] && charImages[name].trim() !== ""){
-        const avatar = document.createElement('img');
-        avatar.src = charImages[name];
-        avatar.className = "avatar";
-        avatar.onerror = () => { avatar.style.display = 'none'; };
-        if(isRight){
-          row.appendChild(bubbleDiv);
-          row.appendChild(avatar);
-        } else {
-          row.appendChild(avatar);
-          row.appendChild(bubbleDiv);
-        }
-      } else {
-        row.appendChild(bubbleDiv);
-      }
-      container.appendChild(row);
-    }
-    function addTitle(title){
-      let tdiv = document.createElement('div');
-      tdiv.className = 'story-title-message';
-      tdiv.innerText = title;
-      if(container.firstChild) container.insertBefore(tdiv, container.firstChild);
-      else container.appendChild(tdiv);
-    }
-    function streamStory(story, token, secondSpeaker){
-      for(let i=0;i<story.lines.length;i++){
-        let tid = setTimeout(()=>{
-          if(token !== activeToken) return;
-          let line = story.lines[i];
-          addMsg(line.name, line.text, line.name === secondSpeaker);
-        }, i*750);
-        pending.push(tid);
-      }
-    }
-    function loadStory(idx){
-      if(idx<1||idx>TOTAL) return;
-      clearTimeouts(); activeToken++; let tok = activeToken;
-      let story = stories[idx-1];
-      let second = story.lines.length>=2 ? story.lines[1].name : null;
-      container.innerHTML='';
-      setBg('chat');
-      addTitle(story.title);
-      streamStory(story, tok, second);
-      currentIdx = idx;
-      indexSpan.innerText = '📖 '+currentIdx+' / '+TOTAL;
-      container.scrollTop = 0;
-    }
-    function reset(){ clearTimeouts(); activeToken++; showEmpty(); }
-    function next(){ if(currentIdx===null) loadStory(1); else { let nxt = currentIdx+1; if(nxt>TOTAL) nxt=1; loadStory(nxt); } }
-    function prev(){ if(currentIdx===null) return; let prv = currentIdx-1; if(prv<1) prv=TOTAL; loadStory(prv); }
-    function randStory(){ loadStory(Math.floor(Math.random()*TOTAL)+1); }
-    document.getElementById('prevBtn').onclick=prev;
-    document.getElementById('nextBtn').onclick=next;
-    document.getElementById('randomBtn').onclick=randStory;
-    document.getElementById('resetBtn').onclick=reset;
-    reset();
-  })();
-<\/script>
-</body>
-</html>`;
-  }
-
-  // 이미지 내보내기 함수 (현재 미리보기 iframe의 위젯 캡처)
-  async function exportAsImage() {
-    try {
-      // iframe 내부의 .chat-viewer-widget 요소 찾기
-      const iframeDoc = previewIframe.contentDocument || previewIframe.contentWindow.document;
-      const widgetElement = iframeDoc.querySelector('.chat-viewer-widget');
-      if (!widgetElement) {
-        alert('위젯 영역을 찾을 수 없습니다. 잠시 후 다시 시도해주세요.');
-        return;
-      }
-      // 스크롤 최상단으로 이동 (전체 영역 캡처)
-      const chatArea = iframeDoc.querySelector('.chat-messages-custom');
-      if (chatArea) chatArea.scrollTop = 0;
-      // html2canvas로 캡처
-      const canvas = await html2canvas(widgetElement, {
-        scale: 2,          // 고해상도
-        backgroundColor: null,
-        useCORS: true,     // 외부 이미지 허용
-        logging: false
-      });
-      // 다운로드
-      const link = document.createElement('a');
-      const timestamp = new Date().toISOString().slice(0,19).replace(/:/g, '-');
-      link.download = `chat_capture_${timestamp}.png`;
-      link.href = canvas.toDataURL();
-      link.click();
-    } catch (err) {
-      console.error(err);
-      alert('이미지 생성 중 오류가 발생했습니다.\n' + err.message);
-    }
-  }
-
-  // 코드 생성 및 미리보기 업데이트
-  function updateGeneratedCode() {
-    const code = generateWidgetHTML();
-    document.getElementById('generatedCode').innerText = code;
-    const blob = new Blob([code], {type: 'text/html'});
-    const url = URL.createObjectURL(blob);
-    previewIframe.src = url;
-    previewIframe.onload = () => URL.revokeObjectURL(url);
-  }
-
-  document.getElementById('copyCodeBtn').onclick = () => {
-    navigator.clipboard.writeText(generateWidgetHTML()).then(() => alert('✅ 코드 복사됨'));
-  };
-  document.getElementById('downloadHtmlBtn').onclick = () => {
-    const blob = new Blob([generateWidgetHTML()], {type: 'text/html'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'chat_widget.html';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  };
-  exportBtn.onclick = exportAsImage;
-
-  function updateAll() {
-    updateGeneratedCode();
-  }
-  const inputs = ['chatRoomName', 'baseFontSize', 'borderRadius', 'headerBg', 'chatBg', 'bubbleLeftColor', 'bubbleRightColor', 'textLeftColor', 'textRightColor', 'nameColor', 'btnBg', 'btnTextColor', 'btnHoverBg', 'chatTitleColor', 'storyTitleColor', 'emptyBgUrl', 'chatBgUrl'];
-  inputs.forEach(id => document.getElementById(id).addEventListener('input', updateAll));
-  renderStoriesForm();
-  updateProfilePanel();
-  updateAll();
+  fillExample(); // 초기 예시
 </script>
 </body>
 </html>
