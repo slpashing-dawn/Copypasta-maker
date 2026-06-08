@@ -525,7 +525,7 @@
   useProfileCheckbox.addEventListener('change', () => { updateProfilePanel(); updateAll(); });
   hideEmptyMsgCheckbox.addEventListener('change', () => updateAll());
 
-  // ======================== HTML 생성 함수 (완전 독립형, 외부 영향 없음, 시간 색상 추가) ========================
+  // ======================== HTML 생성 함수 (완전 독립형, 외부 영향 없음) ========================
   function generateWidgetHTML() {
     const chatRoomName = document.getElementById('chatRoomName').value;
     const baseFontSize = document.getElementById('baseFontSize').value;
@@ -561,27 +561,33 @@
       `function showEmpty(){ container.innerHTML='<div class="capife-empty-chat">💬 대화를 불러오세요<br><span style="font-size:0.8em;">◀ ▶ | 🎲 random</span></div>'; setBg('empty'); indexSpan.innerText='⚡ 대기 ('+TOTAL+'개)'; currentIdx=null; }`;
     
     return `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <style>
-  /* 위젯 외부에는 전혀 영향을 주지 않도록 모든 스타일은 클래스 내부에서만 적용 */
+  /* 완전 격리: 위젯 외부 스타일 영향을 받지 않음, 외부로도 영향 안 줌 */
   .capife-widget-root {
+    all: initial;
     display: block;
     width: 100%;
     margin: 0;
     padding: 0;
   }
   .capife-widget-root * {
+    all: revert;
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
+  }
+  /* 추가 리셋 */
+  .capife-widget-root, .capife-widget-root * {
+    background: none;
+    color: inherit;
+    border: none;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   }
   .capife-phone-container {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
-    margin: 0 auto;
   }
   .capife-phone-frame {
     width: 100%;
@@ -610,7 +616,6 @@
     font-weight: 700;
     font-size: 0.9rem;
     color: ${chatTitleColor};
-    background: transparent;
   }
   .capife-camera-lens {
     position: absolute;
@@ -621,20 +626,13 @@
     height: 10px;
     background: #2b1a2a;
     border-radius: 50%;
-    box-shadow: 0 0 0 2px #ffccdf;
+    box-shadow: 0 0 0 2px ${homeIndicatorColor};
     pointer-events: none;
   }
   .capife-chat-viewer-widget {
-    all: initial;
     display: block;
     width: 100%;
     background: ${chatBg};
-  }
-  .capife-chat-viewer-widget * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   }
   .capife-chat-messages {
     aspect-ratio: 3/4;
@@ -794,7 +792,6 @@
     background: #cbd5e1;
   }
 </style>
-<body style="margin:0; padding:0; background:transparent;">
 <div class="capife-widget-root">
   <div class="capife-phone-container">
     <div class="capife-phone-frame">
@@ -804,19 +801,17 @@
         <div class="capife-camera-lens"></div>
       </div>
       <div class="capife-chat-viewer-widget">
-        <div class="capife-chat-messenger-app">
-          <div id="capifeWidgetChatArea" class="capife-chat-messages" style="${emptyBgUrl ? `background-image: url('${emptyBgUrl}');` : ''}"></div>
-          <div class="capife-nav-bar">
-            <div style="display: flex; gap: 0.8rem;">
-              <button class="capife-icon-btn" id="capifePrevBtn">◀</button>
-              <button class="capife-icon-btn" id="capifeNextBtn">▶</button>
-            </div>
-            <div style="display: flex; gap: 0.8rem;">
-              <button class="capife-icon-btn" id="capifeRandomBtn">🎲</button>
-              <button class="capife-icon-btn" id="capifeResetBtn">⟳</button>
-            </div>
-            <div class="capife-index-badge" id="capifeIndexBadge">대기중</div>
+        <div id="capifeWidgetChatArea" class="capife-chat-messages" style="${emptyBgUrl ? `background-image: url('${emptyBgUrl}');` : ''}"></div>
+        <div class="capife-nav-bar">
+          <div style="display: flex; gap: 0.8rem;">
+            <button class="capife-icon-btn" id="capifePrevBtn">◀</button>
+            <button class="capife-icon-btn" id="capifeNextBtn">▶</button>
           </div>
+          <div style="display: flex; gap: 0.8rem;">
+            <button class="capife-icon-btn" id="capifeRandomBtn">🎲</button>
+            <button class="capife-icon-btn" id="capifeResetBtn">⟳</button>
+          </div>
+          <div class="capife-index-badge" id="capifeIndexBadge">대기중</div>
         </div>
       </div>
       <div class="capife-home-indicator"></div>
@@ -895,9 +890,7 @@
     document.getElementById('capifeResetBtn').onclick=reset;
     reset();
   })();
-<\/script>
-</body>
-</html>`;
+<\/script>`;
   }
 
   // ======================== 전체 캡처 (긴 내용 대응) ========================
