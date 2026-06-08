@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>📱 카피페 위젯 생성기 (심플 버튼)</title>
+<title>📱 카피페 위젯 생성기2 </title>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -244,6 +244,7 @@
         <div class="color-item"><label>이름 색상</label><input type="color" id="nameColor" value="#000000"></div>
         <div class="color-item"><label>버튼 글자색</label><input type="color" id="btnTextColor" value="#0f172a"></div>
         <div class="color-item"><label>채팅방 이름 글자색</label><input type="color" id="chatTitleColor" value="#000000"></div>
+        <div class="color-item"><label>시간 글자색</label><input type="color" id="timeColor" value="#0f172a"></div>
         <div class="color-item"><label>카피페 제목 글자색</label><input type="color" id="storyTitleColor" value="#cbd5e6"></div>
         <div class="color-item"><label>📌 카피페 제목 배경색</label><input type="color" id="storyTitleBg" value="#fff9e6"></div>
         <div class="color-item"><label>구분선 색상</label><input type="color" id="separatorColor" value="#94a3b8"></div>
@@ -524,7 +525,7 @@
   useProfileCheckbox.addEventListener('change', () => { updateProfilePanel(); updateAll(); });
   hideEmptyMsgCheckbox.addEventListener('change', () => updateAll());
 
-  // ======================== HTML 생성 함수 (완전 심플 버튼) ========================
+  // ======================== HTML 생성 함수 (완전 독립형, 외부 영향 없음, 시간 색상 추가) ========================
   function generateWidgetHTML() {
     const chatRoomName = document.getElementById('chatRoomName').value;
     const baseFontSize = document.getElementById('baseFontSize').value;
@@ -538,6 +539,7 @@
     const nameColor = document.getElementById('nameColor').value;
     const btnTextColor = document.getElementById('btnTextColor').value;
     const chatTitleColor = document.getElementById('chatTitleColor').value;
+    const timeColor = document.getElementById('timeColor').value;
     const storyTitleColor = document.getElementById('storyTitleColor').value;
     const storyTitleBg = document.getElementById('storyTitleBg').value;
     const separatorColor = document.getElementById('separatorColor').value;
@@ -556,16 +558,32 @@
     
     const showEmptyFuncBody = hideMessage ? 
       `function showEmpty(){ container.innerHTML=''; setBg('empty'); indexSpan.innerText='⚡ 대기 ('+TOTAL+'개)'; currentIdx=null; }` :
-      `function showEmpty(){ container.innerHTML='<div class="empty-chat-custom">💬 대화를 불러오세요<br><span style="font-size:0.8em;">◀ ▶ | 🎲 random</span></div>'; setBg('empty'); indexSpan.innerText='⚡ 대기 ('+TOTAL+'개)'; currentIdx=null; }`;
+      `function showEmpty(){ container.innerHTML='<div class="capife-empty-chat">💬 대화를 불러오세요<br><span style="font-size:0.8em;">◀ ▶ | 🎲 random</span></div>'; setBg('empty'); indexSpan.innerText='⚡ 대기 ('+TOTAL+'개)'; currentIdx=null; }`;
     
     return `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
-  body { background: #f1f5f9; display:flex; justify-content:center; align-items:center; min-height:100vh; margin:0; padding:16px; }
-  .phone-container { display: flex; justify-content: center; align-items: center; width:100%; }
-  .phone-frame {
+  /* 위젯 외부에는 전혀 영향을 주지 않도록 모든 스타일은 클래스 내부에서만 적용 */
+  .capife-widget-root {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  .capife-widget-root * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  .capife-phone-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .capife-phone-frame {
     width: 100%;
     max-width: 360px;
     background: ${phoneFrameBg};
@@ -575,7 +593,7 @@
     overflow: hidden;
     position: relative;
   }
-  .phone-header {
+  .capife-phone-header {
     background: ${headerBg};
     padding: 10px 18px 6px 18px;
     display: flex;
@@ -583,18 +601,18 @@
     align-items: center;
     border-bottom: 1px solid #e2e8f0;
   }
-  .status-left {
+  .capife-status-left {
     font-size: 12px;
     font-weight: 600;
-    color: #0f172a;
+    color: ${timeColor};
   }
-  .chat-room-name-header {
+  .capife-chat-room-name {
     font-weight: 700;
     font-size: 0.9rem;
     color: ${chatTitleColor};
     background: transparent;
   }
-  .camera-lens {
+  .capife-camera-lens {
     position: absolute;
     top: 12px;
     left: 50%;
@@ -606,29 +624,131 @@
     box-shadow: 0 0 0 2px #ffccdf;
     pointer-events: none;
   }
-  .chat-viewer-widget { all: initial; display: block; width: 100%; background: ${chatBg}; }
-  .chat-viewer-widget * { box-sizing: border-box; margin:0; padding:0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
-  .chat-messenger-app { background: transparent; overflow: hidden; display: flex; flex-direction: column; }
-  .chat-messages-custom { aspect-ratio: 3/4; width: 100%; overflow-y: auto; padding: 1em; display: flex; flex-direction: column; gap: 0.9em; background-size: cover; background-position: center; background-color: ${chatBg}; scroll-behavior: smooth; }
-  .story-title-message { text-align: center; margin-bottom: 0.7em; padding: 0.5em 1em; background: ${storyTitleBg}; border-radius: 2.5em; font-size: 0.85em; font-weight: 700; color: ${storyTitleColor}; align-self: center; backdrop-filter: blur(4px); border: 1px solid #cbd5e1; }
-  .message-row { display: flex; align-items: flex-start; gap: 0.6em; max-width: 100%; }
-  .message-row-left { justify-content: flex-start; }
-  .message-row-right { justify-content: flex-end; }
-  .separator-line { text-align: center; margin: 0.3em 0; color: ${separatorColor}; font-size: 0.75em; letter-spacing: 1px; font-weight: 500; }
-  .avatar { width: 2.2em; height: 2.2em; border-radius: 50%; object-fit: cover; background: #cbd5e1; flex-shrink: 0; border: 1.5px solid white; }
-  .message-bubble-custom { display: flex; flex-direction: column; max-width: 80%; animation: fadeSlide 0.2s ease; }
-  .message-left .message-bubble-custom { align-items: flex-start; }
-  .message-right .message-bubble-custom { align-items: flex-end; }
-  .message-name-custom { font-size: 0.7em; font-weight: 700; color: ${nameColor}; margin-bottom: 0.15em; margin-left: 0.2em; margin-right: 0.2em; }
-  .bubble-text-custom { padding: 0.55em 1em; border-radius: 1.4em; font-size: 0.85em; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-  .bubble-left { background: ${bubbleLeftColor}; color: ${textLeftColor}; border-bottom-left-radius: 0.2em; }
-  .bubble-right { background: ${bubbleRightColor}; color: ${textRightColor}; border-bottom-right-radius: 0.2em; }
-  .chat-image { max-width: 100%; max-height: 180px; border-radius: 1rem; cursor: pointer; margin-top: 4px; border: 2px solid white; }
-  @keyframes fadeSlide { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-  .empty-chat-custom { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #64748b; background: rgba(0,0,0,0.05); border-radius: 1.2em; padding: 1em; font-weight: 500; }
-  
-  /* ===== 완전 심플 버튼 스타일 ===== */
-  .nav-bar-custom {
+  .capife-chat-viewer-widget {
+    all: initial;
+    display: block;
+    width: 100%;
+    background: ${chatBg};
+  }
+  .capife-chat-viewer-widget * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  .capife-chat-messages {
+    aspect-ratio: 3/4;
+    width: 100%;
+    overflow-y: auto;
+    padding: 1em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9em;
+    background-size: cover;
+    background-position: center;
+    background-color: ${chatBg};
+    scroll-behavior: smooth;
+  }
+  .capife-story-title {
+    text-align: center;
+    margin-bottom: 0.7em;
+    padding: 0.5em 1em;
+    background: ${storyTitleBg};
+    border-radius: 2.5em;
+    font-size: 0.85em;
+    font-weight: 700;
+    color: ${storyTitleColor};
+    align-self: center;
+    backdrop-filter: blur(4px);
+    border: 1px solid #cbd5e1;
+  }
+  .capife-message-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6em;
+    max-width: 100%;
+  }
+  .capife-message-left {
+    justify-content: flex-start;
+  }
+  .capife-message-right {
+    justify-content: flex-end;
+  }
+  .capife-separator {
+    text-align: center;
+    margin: 0.3em 0;
+    color: ${separatorColor};
+    font-size: 0.75em;
+    letter-spacing: 1px;
+    font-weight: 500;
+  }
+  .capife-avatar {
+    width: 2.2em;
+    height: 2.2em;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #cbd5e1;
+    flex-shrink: 0;
+    border: 1.5px solid white;
+  }
+  .capife-bubble-wrapper {
+    display: flex;
+    flex-direction: column;
+    max-width: 80%;
+    animation: capifeFadeSlide 0.2s ease;
+  }
+  .capife-name {
+    font-size: 0.7em;
+    font-weight: 700;
+    color: ${nameColor};
+    margin-bottom: 0.15em;
+    margin-left: 0.2em;
+    margin-right: 0.2em;
+  }
+  .capife-bubble {
+    padding: 0.55em 1em;
+    border-radius: 1.4em;
+    font-size: 0.85em;
+    line-height: 1.4;
+    word-break: break-word;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  .capife-bubble-left {
+    background: ${bubbleLeftColor};
+    color: ${textLeftColor};
+    border-bottom-left-radius: 0.2em;
+  }
+  .capife-bubble-right {
+    background: ${bubbleRightColor};
+    color: ${textRightColor};
+    border-bottom-right-radius: 0.2em;
+  }
+  .capife-chat-image {
+    max-width: 100%;
+    max-height: 180px;
+    border-radius: 1rem;
+    cursor: pointer;
+    margin-top: 4px;
+    border: 2px solid white;
+  }
+  @keyframes capifeFadeSlide {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .capife-empty-chat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    color: #64748b;
+    background: rgba(0,0,0,0.05);
+    border-radius: 1.2em;
+    padding: 1em;
+    font-weight: 500;
+  }
+  .capife-nav-bar {
     background: #f8fafc;
     padding: 0.5rem 1rem;
     display: flex;
@@ -636,7 +756,7 @@
     justify-content: space-between;
     border-top: 1px solid #e2e8f0;
   }
-  .icon-btn-custom {
+  .capife-icon-btn {
     background: transparent;
     border: none;
     font-size: 1.3rem;
@@ -648,15 +768,12 @@
     cursor: pointer;
     color: ${btnTextColor};
     transition: opacity 0.2s, transform 0.1s;
-    border-radius: 0;
-    margin: 0;
-    padding: 0;
   }
-  .icon-btn-custom:hover {
+  .capife-icon-btn:hover {
     opacity: 0.6;
     transform: scale(0.92);
   }
-  .index-badge-custom {
+  .capife-index-badge {
     background: #e2e8f0;
     padding: 0.2rem 0.7rem;
     border-radius: 2rem;
@@ -664,34 +781,46 @@
     font-weight: 500;
     color: #1e293b;
   }
-  .home-indicator { width: 130px; height: 4px; background: ${homeIndicatorColor}; border-radius: 20px; margin: 8px auto 10px auto; opacity: 0.7; }
-  .chat-messages-custom::-webkit-scrollbar { width: 3px; background: #cbd5e1; }
+  .capife-home-indicator {
+    width: 130px;
+    height: 4px;
+    background: ${homeIndicatorColor};
+    border-radius: 20px;
+    margin: 8px auto 10px auto;
+    opacity: 0.7;
+  }
+  .capife-chat-messages::-webkit-scrollbar {
+    width: 3px;
+    background: #cbd5e1;
+  }
 </style>
-<body>
-<div class="phone-container">
-  <div class="phone-frame">
-    <div class="phone-header">
-      <div class="status-left"><span class="clock" id="liveClock">12:00</span></div>
-      <div class="chat-room-name-header">${escapeHtml(chatRoomName)}</div>
-      <div class="camera-lens"></div>
-    </div>
-    <div class="chat-viewer-widget">
-      <div class="chat-messenger-app">
-        <div id="widgetChatArea" class="chat-messages-custom" style="${emptyBgUrl ? `background-image: url('${emptyBgUrl}');` : ''}"></div>
-        <div class="nav-bar-custom">
-          <div style="display: flex; gap: 0.8rem;">
-            <button class="icon-btn-custom" id="prevBtn">◀</button>
-            <button class="icon-btn-custom" id="nextBtn">▶</button>
+<body style="margin:0; padding:0; background:transparent;">
+<div class="capife-widget-root">
+  <div class="capife-phone-container">
+    <div class="capife-phone-frame">
+      <div class="capife-phone-header">
+        <div class="capife-status-left"><span class="capife-clock" id="capifeLiveClock">12:00</span></div>
+        <div class="capife-chat-room-name">${escapeHtml(chatRoomName)}</div>
+        <div class="capife-camera-lens"></div>
+      </div>
+      <div class="capife-chat-viewer-widget">
+        <div class="capife-chat-messenger-app">
+          <div id="capifeWidgetChatArea" class="capife-chat-messages" style="${emptyBgUrl ? `background-image: url('${emptyBgUrl}');` : ''}"></div>
+          <div class="capife-nav-bar">
+            <div style="display: flex; gap: 0.8rem;">
+              <button class="capife-icon-btn" id="capifePrevBtn">◀</button>
+              <button class="capife-icon-btn" id="capifeNextBtn">▶</button>
+            </div>
+            <div style="display: flex; gap: 0.8rem;">
+              <button class="capife-icon-btn" id="capifeRandomBtn">🎲</button>
+              <button class="capife-icon-btn" id="capifeResetBtn">⟳</button>
+            </div>
+            <div class="capife-index-badge" id="capifeIndexBadge">대기중</div>
           </div>
-          <div style="display: flex; gap: 0.8rem;">
-            <button class="icon-btn-custom" id="randomBtn">🎲</button>
-            <button class="icon-btn-custom" id="resetBtn">⟳</button>
-          </div>
-          <div class="index-badge-custom" id="indexBadge">대기중</div>
         </div>
       </div>
+      <div class="capife-home-indicator"></div>
     </div>
-    <div class="home-indicator"></div>
   </div>
 </div>
 <script>
@@ -702,19 +831,19 @@
     const emptyBg = "${emptyBgUrl.replace(/\\/g, '\\\\')}", chatBg = "${chatBgUrl.replace(/\\/g, '\\\\')}";
     const useProfile = ${useProfile};
     const charImages = ${charImagesJson};
-    const container = document.getElementById('widgetChatArea');
-    const indexSpan = document.getElementById('indexBadge');
-    function updateClockUI(){ const now = new Date(); document.getElementById('liveClock').innerText = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
+    const container = document.getElementById('capifeWidgetChatArea');
+    const indexSpan = document.getElementById('capifeIndexBadge');
+    function updateClockUI(){ const now = new Date(); document.getElementById('capifeLiveClock').innerText = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
     updateClockUI(); setInterval(updateClockUI, 1000);
     function clearTimeouts(){ for(let t of pending) clearTimeout(t); pending=[]; }
     function setBg(state){ let url = state==='empty' ? emptyBg : chatBg; if(url && url.trim()) container.style.backgroundImage = "url('"+url+"')"; else container.style.backgroundImage="none"; container.style.backgroundColor="${chatBg}"; }
     ${showEmptyFuncBody}
     function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>]/g, m=> m==='&'?'&amp;':(m==='<'?'&lt;':'&gt;')); }
     function isImageUrl(url) { return /^https?:\\/\\/[^\\s]+\\.(jpg|jpeg|png|gif|webp)(\\?.*)?$/i.test(url); }
-    function formatMessageContent(text) { if(isImageUrl(text)) return '<img src="'+escapeHtml(text)+'" class="chat-image" onclick="window.open(this.src)" loading="lazy">'; return escapeHtml(text); }
+    function formatMessageContent(text) { if(isImageUrl(text)) return '<img src="'+escapeHtml(text)+'" class="capife-chat-image" onclick="window.open(this.src)" loading="lazy">'; return escapeHtml(text); }
     function addSeparator(sepText) {
       const div = document.createElement('div');
-      div.className = 'separator-line';
+      div.className = 'capife-separator';
       if (sepText && sepText.trim() !== "") {
         div.innerText = '─── ' + sepText + ' ───';
       } else {
@@ -723,16 +852,18 @@
       container.appendChild(div);
     }
     function addMsg(name, text, isRight){
-      const row = document.createElement('div'); row.className = "message-row " + (isRight ? "message-row-right" : "message-row-left");
-      const bubbleDiv = document.createElement('div'); bubbleDiv.className = "message-bubble-custom " + (isRight ? "message-right" : "message-left");
-      bubbleDiv.innerHTML = '<div class="message-name-custom">'+escapeHtml(name)+'</div><div class="bubble-text-custom '+(isRight?"bubble-right":"bubble-left")+'">'+formatMessageContent(text)+'</div>';
+      const row = document.createElement('div');
+      row.className = "capife-message-row " + (isRight ? "capife-message-right" : "capife-message-left");
+      const bubbleDiv = document.createElement('div');
+      bubbleDiv.className = "capife-bubble-wrapper " + (isRight ? "capife-message-right" : "capife-message-left");
+      bubbleDiv.innerHTML = '<div class="capife-name">'+escapeHtml(name)+'</div><div class="capife-bubble '+(isRight?"capife-bubble-right":"capife-bubble-left")+'">'+formatMessageContent(text)+'</div>';
       if(useProfile && charImages[name] && charImages[name].trim() !== ""){
-        const avatar = document.createElement('img'); avatar.src = charImages[name]; avatar.className = "avatar"; avatar.onerror = () => { avatar.style.display = 'none'; };
+        const avatar = document.createElement('img'); avatar.src = charImages[name]; avatar.className = "capife-avatar"; avatar.onerror = () => { avatar.style.display = 'none'; };
         if(isRight){ row.appendChild(bubbleDiv); row.appendChild(avatar); } else { row.appendChild(avatar); row.appendChild(bubbleDiv); }
       } else { row.appendChild(bubbleDiv); }
       container.appendChild(row);
     }
-    function addTitle(title){ let tdiv = document.createElement('div'); tdiv.className = 'story-title-message'; tdiv.innerText = title; if(container.firstChild) container.insertBefore(tdiv, container.firstChild); else container.appendChild(tdiv); }
+    function addTitle(title){ let tdiv = document.createElement('div'); tdiv.className = 'capife-story-title'; tdiv.innerText = title; if(container.firstChild) container.insertBefore(tdiv, container.firstChild); else container.appendChild(tdiv); }
     function streamStory(story, token, secondSpeaker){
       for(let i=0;i<story.lines.length;i++){
         let line = story.lines[i];
@@ -758,8 +889,10 @@
     function next(){ if(currentIdx===null) loadStory(1); else { let nxt = currentIdx+1; if(nxt>TOTAL) nxt=1; loadStory(nxt); } }
     function prev(){ if(currentIdx===null) return; let prv = currentIdx-1; if(prv<1) prv=TOTAL; loadStory(prv); }
     function randStory(){ loadStory(Math.floor(Math.random()*TOTAL)+1); }
-    document.getElementById('prevBtn').onclick=prev; document.getElementById('nextBtn').onclick=next;
-    document.getElementById('randomBtn').onclick=randStory; document.getElementById('resetBtn').onclick=reset;
+    document.getElementById('capifePrevBtn').onclick=prev;
+    document.getElementById('capifeNextBtn').onclick=next;
+    document.getElementById('capifeRandomBtn').onclick=randStory;
+    document.getElementById('capifeResetBtn').onclick=reset;
     reset();
   })();
 <\/script>
@@ -774,8 +907,8 @@
       exportBtn.textContent = '📸 캡처 중...';
       
       const iframeDoc = previewIframe.contentDocument || previewIframe.contentWindow.document;
-      const phoneFrame = iframeDoc.querySelector('.phone-frame');
-      const chatArea = iframeDoc.querySelector('.chat-messages-custom');
+      const phoneFrame = iframeDoc.querySelector('.capife-phone-frame');
+      const chatArea = iframeDoc.querySelector('.capife-chat-messages');
       if (!phoneFrame || !chatArea) {
         alert('위젯 영역을 찾을 수 없습니다.');
         return;
@@ -818,7 +951,7 @@
       console.error(err);
       alert('이미지 생성 중 오류가 발생했습니다.\n' + err.message);
       const iframeDoc = previewIframe.contentDocument;
-      const chatArea = iframeDoc?.querySelector('.chat-messages-custom');
+      const chatArea = iframeDoc?.querySelector('.capife-chat-messages');
       if (chatArea) {
         chatArea.style.overflow = '';
         chatArea.style.height = '';
@@ -856,7 +989,7 @@
   function updateAll() {
     updateGeneratedCode();
   }
-  const inputs = ['chatRoomName', 'baseFontSize', 'borderRadius', 'headerBg', 'chatBg', 'bubbleLeftColor', 'bubbleRightColor', 'textLeftColor', 'textRightColor', 'nameColor', 'btnTextColor', 'chatTitleColor', 'storyTitleColor', 'storyTitleBg', 'separatorColor', 'emptyBgUrl', 'chatBgUrl', 'phoneFrameBg', 'phoneFrameBorder', 'homeIndicatorColor'];
+  const inputs = ['chatRoomName', 'baseFontSize', 'borderRadius', 'headerBg', 'chatBg', 'bubbleLeftColor', 'bubbleRightColor', 'textLeftColor', 'textRightColor', 'nameColor', 'btnTextColor', 'chatTitleColor', 'timeColor', 'storyTitleColor', 'storyTitleBg', 'separatorColor', 'emptyBgUrl', 'chatBgUrl', 'phoneFrameBg', 'phoneFrameBorder', 'homeIndicatorColor'];
   inputs.forEach(id => document.getElementById(id).addEventListener('input', updateAll));
   renderStoriesForm();
   updateProfilePanel();
